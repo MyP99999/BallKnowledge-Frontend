@@ -40,6 +40,7 @@ export default function Navbar() {
   const maxLives = 5;
   const [lives, setLives] = useState(5);
   const [timeUntilNextLife, setTimeUntilNextLife] = useState(900);
+  const [menuOpen, setMenuOpen] = useState(false); // 👈 mobile menu state
   const totalPoints = 1250;
   const rank = 1234;
 
@@ -63,61 +64,128 @@ export default function Navbar() {
       : Math.round(((900 - timeUntilNextLife) / 900) * 100);
 
   const linkClass = ({ isActive }) =>
-    `block hover:text-yellow-400 ${
+    `block px-3 my-1 py-1 rounded hover:text-yellow-400 bg-green-950 hover:bg-green-900 ${
       isActive ? "text-yellow-400 font-bold" : "text-white"
     }`;
 
   return (
-    <nav className="bg-green-950 text-white w-full shadow-md">
+    <nav className="bg-green-950 text-white w-full shadow-md relative border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-2 lg:px-4">
         <div className="flex items-center justify-between h-16">
-          <NavLink to="/" className="flex items-center hover:scale-105 transition duration-150">
+          <NavLink
+            to="/"
+            className="flex items-center hover:scale-105 transition duration-150"
+          >
             <img className="h-16 w-16" src="/Ball.png" alt="Logo" />
-            <span className="hidden md:flex font-bold text-xl">Ball Knowledge</span>
+            <span className="hidden md:flex font-bold text-xl">
+              Ball Knowledge
+            </span>
           </NavLink>
 
-          {/* Stats bar with tooltips */}
+          {/* Stats bar */}
           <div className="flex items-center gap-2 bg-green-800/60 rounded-full px-2 py-1 shadow-sm backdrop-blur">
-            <Tooltip text={lives >= maxLives ? "Lives: max" : "Your current lives. Watch ads or wait to refill."}>
+            <Tooltip
+              text={
+                lives >= maxLives
+                  ? "Lives: max"
+                  : "Your current lives. Watch ads or wait to refill."
+              }
+            >
               <LivesPill
                 lives={lives}
                 maxLives={maxLives}
                 pct={pct}
-                onWatchAd={() => setLives((l) => Math.min(l + 1, maxLives))}
+                onWatchAd={() =>
+                  setLives((l) => Math.min(l + 1, maxLives))
+                }
               />
             </Tooltip>
 
             <div className="h-6 w-px bg-green-600/60" />
 
             <Tooltip text="Total Ball Knowledge points earned across all games">
-              <StatPill icon="⚽" label="Points" value={totalPoints} color="yellow" />
+              <StatPill
+                icon="⚽"
+                label="Points"
+                value={totalPoints}
+                color="yellow"
+              />
             </Tooltip>
 
             <div className="h-6 w-px bg-green-600/60" />
 
             <Tooltip text="Your current global leaderboard position">
-              <StatPill icon="🏆" label="Rank" value={`#${rank}`} color="purple" />
+              <StatPill
+                icon="🏆"
+                label="Rank"
+                value={`#${rank}`}
+                color="purple"
+              />
             </Tooltip>
           </div>
 
+          {/* Desktop links */}
           <div className="hidden lg:flex space-x-6">
-            <NavLink to="/" className={linkClass}>Home</NavLink>
-            <NavLink to="/games" className={linkClass}>Games</NavLink>
-            <NavLink to="/leaderboard" className={linkClass}>Leaderboard</NavLink>
-            <NavLink to="/clans" className={linkClass}>Clans</NavLink>
-          </div>
-
-          <div className="hidden lg:flex">
-            <NavLink to="/login">
-              <button className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition">Login</button>
+            <NavLink to="/" className={linkClass}>
+              Home
+            </NavLink>
+            <NavLink to="/games" className={linkClass}>
+              Games
+            </NavLink>
+            <NavLink to="/leaderboard" className={linkClass}>
+              Leaderboard
+            </NavLink>
+            <NavLink to="/clans" className={linkClass}>
+              Clans
             </NavLink>
           </div>
 
+          {/* Desktop login */}
+          <div className="hidden lg:flex">
+            <NavLink to="/login">
+              <button className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition">
+                Login
+              </button>
+            </NavLink>
+          </div>
+
+          {/* Burger button (mobile) */}
           <div className="lg:hidden">
-            <button className="text-white hover:text-yellow-400 focus:outline-none">☰</button>
+            <button
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="text-white text-2xl hover:text-yellow-400 focus:outline-none"
+            >
+              {menuOpen ? "✕" : "☰"}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile dropdown menu */}
+      {menuOpen && (
+        <div className="lg:hidden absolute top-16 left-0 w-full bg-green-950 shadow-lg z-50">
+          <hr />
+          <div className="flex flex-col px-4 py-2">
+            <NavLink to="/" className={linkClass} onClick={() => setMenuOpen(false)}>
+              Home
+            </NavLink>
+            <NavLink to="/games" className={linkClass} onClick={() => setMenuOpen(false)}>
+              Games
+            </NavLink>
+            <NavLink to="/leaderboard" className={linkClass} onClick={() => setMenuOpen(false)}>
+              Leaderboard
+            </NavLink>
+            <NavLink to="/clans" className={linkClass} onClick={() => setMenuOpen(false)}>
+              Clans
+            </NavLink>
+            <NavLink to="/login" onClick={() => setMenuOpen(false)}>
+              <button className="w-full bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 transition mt-2">
+                Login
+              </button>
+            </NavLink>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

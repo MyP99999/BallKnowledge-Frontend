@@ -1,8 +1,18 @@
+import { Overlay } from "../components/Overlay";
+
 export const LoginPage = () => {
   return (
-    <div className="bg-gradient-to-b from-green-900 to-green-700 min-h-screen flex items-center justify-center px-4">
-      <div className="bg-green-950 p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold text-white text-center mb-6">Login</h2>
+    <div
+      className="min-h-screen flex flex-col bg-green-700 items-center justify-center bg-cover bg-center bg-no-repeat text-white"
+      style={{ backgroundImage: "url('/pitch.jpg')" }}
+    >
+      {/* Dark overlay */}
+      <Overlay />
+
+      <div className="relative bg-green-950/90 p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="text-3xl font-bold text-white text-center mb-6">
+          Login
+        </h2>
         <form className="space-y-4">
           <div>
             <label className="block text-white text-sm mb-1">Email</label>

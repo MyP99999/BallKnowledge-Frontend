@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Overlay } from "./Overlay";
 
 const correctSound = new Audio("/sounds/correct.wav");
 const wrongSound = new Audio("/sounds/wrong.wav");
@@ -21,12 +23,13 @@ const questions = [
     answer: "Brazil",
   },
 ];
+const totalTime = 15;
 
 export const QuizGame = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(5);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(totalTime);
   const [gameOver, setGameOver] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [usedFiftyFifty, setUsedFiftyFifty] = useState(false);
@@ -54,10 +57,10 @@ export const QuizGame = () => {
 
     if (correct) {
       setScore((prev) => prev + points);
-      correctSound.play();
+      //   correctSound.play();
     } else {
       setLives((prev) => prev - 1);
-      wrongSound.play();
+      //   wrongSound.play();
     }
 
     setTimeout(() => {
@@ -65,7 +68,7 @@ export const QuizGame = () => {
       setVisibleOptions([]);
 
       if (!correct && lives - 1 <= 0) {
-        gameOverSound.play();
+        // gameOverSound.play();
         setGameOver(true);
         return;
       }
@@ -74,9 +77,9 @@ export const QuizGame = () => {
         const nextQuestion = questions[currentIndex + 1];
         setCurrentIndex((prev) => prev + 1);
         setVisibleOptions(nextQuestion.options);
-        setTimeLeft(125);
+        setTimeLeft(totalTime);
       } else {
-        gameOverSound.play();
+        // gameOverSound.play();
         setGameOver(true);
       }
     }, 900);
@@ -107,7 +110,7 @@ export const QuizGame = () => {
     setCurrentIndex(0);
     setScore(0);
     setLives(5);
-    setTimeLeft(125);
+    setTimeLeft(totalTime);
     setGameOver(false);
     setUsedFiftyFifty(false);
     setVisibleOptions(questions[0].options);
@@ -116,24 +119,45 @@ export const QuizGame = () => {
   // Game Over Screen
   if (gameOver) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-green-900 text-white">
-        <h1 className="text-4xl font-bold mb-4">🏆 Game Over</h1>
-        <p className="text-xl mb-2">Final Score: {score}</p>
-        <button
-          onClick={restartGame}
-          className="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition"
-        >
-          Play Again
-        </button>
+      <div
+        className="min-h-screen flex flex-col bg-green-700 items-center justify-center bg-cover bg-center bg-no-repeat text-white"
+        style={{
+          backgroundImage: "url('/pitch.jpg')",
+        }}
+      >
+        <Overlay />
+        <div className="relative bg-green-950 bg-opacity-80 rounded-lg p-6 py-12 max-w-xl w-full shadow-xl flex items-center justify-center flex-col">
+          <h1 className="text-4xl font-bold mb-4">Game Over</h1>
+          <p className="text-xl mb-4">Final Score: {score}</p>
+          <div className="flex justify-center items-center gap-4">
+            <button
+              onClick={restartGame}
+              className="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition"
+            >
+              Play Again
+            </button>
+            <Link to="/">
+              <button className="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition">
+                Main Menu
+              </button>
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   // Game Screen
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-green-900 text-white p-4">
+    <div
+      className="min-h-screen flex flex-col bg-green-700 items-center justify-center bg-cover bg-center bg-no-repeat text-white"
+      style={{
+        backgroundImage: "url('/pitch.jpg')",
+      }}
+    >
+      <Overlay />
       {/* Question Card */}
-      <div className="bg-green-800 rounded-lg p-6 max-w-xl w-full shadow-xl">
+      <div className="relative bg-green-950 bg-opacity-80 rounded-lg p-6 max-w-xl w-full shadow-xl">
         <h1 className="text-2xl font-bold text-center mb-8">
           ⚽ Ball Knowledge
         </h1>
