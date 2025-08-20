@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { Overlay } from "../components/Overlay";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 export const LandingPage = () => {
   // Mock data
@@ -30,9 +33,36 @@ export const LandingPage = () => {
     { icon: "🪄", text: "Power-ups" },
     { icon: "👥", text: "Clans" },
   ];
-
+  // 👉 Refs
   const prevRef = useRef(null);
   const nextRef = useRef(null);
+  const swiperRef = useRef(null);
+
+  // ✅ Bind navigation after everything is mounted
+  useEffect(() => {
+    const swiper = swiperRef.current;
+    if (!swiper) return;
+
+    // Wait one microtask so refs are attached
+    const id = requestAnimationFrame(() => {
+      if (!prevRef.current || !nextRef.current) return;
+
+      // Make sure navigation params exist and are enabled
+      if (!swiper.params.navigation)
+        swiper.params.navigation = { enabled: true };
+      swiper.params.navigation.prevEl = prevRef.current;
+      swiper.params.navigation.nextEl = nextRef.current;
+
+      // Re-init navigation cleanly
+      if (swiper.navigation) {
+        swiper.navigation.destroy();
+        swiper.navigation.init();
+        swiper.navigation.update();
+      }
+    });
+
+    return () => cancelAnimationFrame(id);
+  }, []); // run once after mount
 
   // Fun live counters (mock)
   const [playersOnline, setPlayersOnline] = useState(1243);
@@ -68,13 +98,13 @@ export const LandingPage = () => {
 
       {/* CONTENT */}
       <div className="relative z-10 w-full flex flex-col items-center px-4">
-        {/* HERO TITLE */}
+        {/* HERO TITLE
         <h1 className="text-4xl sm:text-5xl font-bold my-12 text-white text-center">
           ⚽ Ball Knowledge
-        </h1>
+        </h1> */}
 
         {/* HERO SECTION */}
-        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
+        <div className="w-full max-w-6xl mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
           {/* Left: Headline & CTAs */}
           <div className="bg-green-950/70 border border-green-900 rounded-xl p-6 md:p-8 backdrop-blur-sm shadow-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-800/70 border border-green-700 text-xs uppercase tracking-wide mb-4">
@@ -282,13 +312,8 @@ export const LandingPage = () => {
               }}
               className="pb-12"
               onSwiper={(swiper) => {
-                // fix: bind refs after mount
-                setTimeout(() => {
-                  swiper.params.navigation.prevEl = prevRef.current;
-                  swiper.params.navigation.nextEl = nextRef.current;
-                  swiper.navigation.init();
-                  swiper.navigation.update();
-                });
+                // store instance; we’ll wire buttons in useEffect
+                swiperRef.current = swiper;
               }}
             >
               {games.map((game, idx) => (
@@ -310,16 +335,18 @@ export const LandingPage = () => {
               ))}
             </Swiper>
 
-            {/* Custom buttons */}
+            {/* Custom arrows */}
             <button
               ref={prevRef}
-              className="custom-prev absolute top-1/2 -left-16 transform -translate-y-1/2 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold transition hover:scale-110"
+              className="custom-prev absolute top-1/2 -left-16 -translate-y-1/2 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold transition hover:scale-110"
+              aria-label="Previous"
             >
               ‹
             </button>
             <button
               ref={nextRef}
-              className="custom-next absolute top-1/2 -right-16 transform -translate-y-1/2 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold transition hover:scale-110"
+              className="custom-next absolute top-1/2 -right-16 -translate-y-1/2 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold transition hover:scale-110"
+              aria-label="Next"
             >
               ›
             </button>
