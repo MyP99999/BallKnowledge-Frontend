@@ -6,6 +6,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { useAuth } from "../context/AuthContext";
 import { GamesSlider } from "../components/GamesSlider";
+import { Leaderboard } from "../components/Leaderboard";
+import { Clans } from "../components/Clans";
 
 export const LandingPage = () => {
   // Mock data
@@ -232,44 +234,11 @@ export const LandingPage = () => {
         </div>
 
         {/* LEADERBOARD & CLANS */}
-        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
-          <div className="bg-green-950/80 backdrop-blur-md p-6 rounded-lg shadow-xl w-full">
-            <h2 className="text-2xl font-bold mb-4 text-yellow-400 text-center">
-              🏆 Leaderboard
-            </h2>
-            <ul className="space-y-2">
-              {leaderboard.map((player, idx) => (
-                <li
-                  key={idx}
-                  className="flex justify-between bg-green-800/60 px-4 py-2 rounded-md"
-                >
-                  <span>
-                    {idx + 1}. {player.name}
-                  </span>
-                  <span className="font-bold">{player.points} pts</span>
-                </li>
-              ))}
-            </ul>
-            <div className="text-center mt-4">
-              <Link to="/leaderboard">
-                <button className="text-yellow-400 hover:underline">
-                  View Full Leaderboard
-                </button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="bg-green-950/70 backdrop-blur-md p-6 rounded-lg shadow-xl w-full text-center">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-3">
-              👥 Clans Coming Soon
-            </h2>
-            <p className="text-gray-200">
-              Team up with friends, compete in weekly tournaments, and climb the
-              global clan leaderboard!
-            </p>
-          </div>
+        <div className="w-full my-16 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
+          <Leaderboard leaderboard={leaderboard} />
+          <Clans />
         </div>
-
+        
         <GamesSlider user={user} />
       </div>
     </div>
