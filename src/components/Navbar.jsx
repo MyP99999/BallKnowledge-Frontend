@@ -97,7 +97,7 @@ export default function Navbar() {
 
           {/* Stats bar */}
           <div className="flex items-center gap-2 bg-green-800/60 rounded-full px-2 py-1 shadow-sm backdrop-blur">
-            {/* Lives */}
+            {/* Lives
             <Tooltip
               text={
                 lives >= maxLives
@@ -113,7 +113,7 @@ export default function Navbar() {
               />
             </Tooltip>
 
-            <div className="h-6 w-px bg-green-600/60" />
+            <div className="h-6 w-px bg-green-600/60" /> */}
 
             {/* Points */}
             <Tooltip text="Total Ball Knowledge points earned across all games">
@@ -175,7 +175,7 @@ export default function Navbar() {
                 </NavLink>
 
                 {/* Dropdown wrapper with hover bridge */}
-                <div className="absolute right-0 mt-2 w-40 z-50">
+                <div className="absolute left-0 mt-2 w-40 z-50">
                   {/* Invisible hover bridge */}
                   <div className="absolute -top-2 left-0 right-0 h-2"></div>
 
@@ -190,6 +190,12 @@ export default function Navbar() {
                       className="block px-4 py-2 text-sm text-white hover:bg-green-800 rounded-t-md"
                     >
                       Profile
+                    </NavLink>
+                    <NavLink
+                      to="/admin"
+                      className="block px-4 py-2 text-sm text-white hover:bg-green-800 rounded-t-md"
+                    >
+                      Admin
                     </NavLink>
                     <button
                       onClick={logout}

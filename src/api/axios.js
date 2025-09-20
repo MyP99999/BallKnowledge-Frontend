@@ -17,4 +17,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle expired JWT
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403)
+    ) {
+      // Clear stored token
+      localStorage.removeItem("accessToken");
+
+      // Redirect to login page
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

@@ -16,6 +16,8 @@ import { VerifyPage } from "./pages/VerifyPage";   // ✅ import the verify page
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import GoogleCallbackPage from "./pages/GoogleCallbackPage";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 
 function App() {
   const { user, loading } = useAuth();
@@ -55,6 +57,13 @@ function App() {
           {/* ✅ New verify route */}
           <Route path="/verify" element={<VerifyPage />} />
           <Route path="/google-callback" element={<GoogleCallbackPage />} />
+
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="users" element={<div>Users & Stats (coming soon)</div>} />
+            <Route path="questions" element={<AdminQuestionsPage />} />
+            <Route path="daily" element={<div>Daily Challenge (coming soon)</div>} />
+          </Route>
+
         </Routes>
       </div>
 

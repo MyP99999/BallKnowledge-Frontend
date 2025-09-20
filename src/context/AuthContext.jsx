@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
         setUser({
+          id: payload.id,
           email: payload.sub,
           username: payload.username || payload.sub,
           roles: payload.roles || [],

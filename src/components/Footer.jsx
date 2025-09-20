@@ -40,7 +40,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/play" className="hover:text-yellow-400 transition">
+                <a href="/games" className="hover:text-yellow-400 transition">
                   🎮 Play Game
                 </a>
               </li>

@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Overlay } from "../components/Overlay";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { useAuth } from "../context/AuthContext";
+import { GamesSlider } from "../components/GamesSlider";
 
 export const LandingPage = () => {
   // Mock data
@@ -17,52 +17,16 @@ export const LandingPage = () => {
     { name: "Underdog", points: 3400 },
   ];
 
-  const games = [
-    { name: "Guess the Player", icon: "❓", link: "/match" },
-    { name: "Logo Quiz", icon: "🛡️", link: "/quiz" },
-    { name: "Transfer Market", icon: "💰", link: "/quiz" },
-    { name: "Stadium Guess", icon: "🏟️", link: "/quiz" },
-    { name: "Logo Quiz", icon: "🛡️", link: "/quiz" },
-    { name: "Transfer Market", icon: "💰", link: "/quiz" },
-    { name: "Stadium Guess", icon: "🏟️", link: "/quiz" },
-  ];
-
   const features = [
+    { icon: "🔥", text: "Quiz Games" },
     { icon: "🔥", text: "Daily Challenge" },
-    { icon: "⚔️", text: "1v1 Duels" },
-    { icon: "🪄", text: "Power-ups" },
-    { icon: "👥", text: "Clans" },
   ];
-  // 👉 Refs
-  const prevRef = useRef(null);
-  const nextRef = useRef(null);
-  const swiperRef = useRef(null);
-
-  // ✅ Bind navigation after everything is mounted
-  useEffect(() => {
-    const swiper = swiperRef.current;
-    if (!swiper) return;
-
-    // Wait one microtask so refs are attached
-    const id = requestAnimationFrame(() => {
-      if (!prevRef.current || !nextRef.current) return;
-
-      // Make sure navigation params exist and are enabled
-      if (!swiper.params.navigation)
-        swiper.params.navigation = { enabled: true };
-      swiper.params.navigation.prevEl = prevRef.current;
-      swiper.params.navigation.nextEl = nextRef.current;
-
-      // Re-init navigation cleanly
-      if (swiper.navigation) {
-        swiper.navigation.destroy();
-        swiper.navigation.init();
-        swiper.navigation.update();
-      }
-    });
-
-    return () => cancelAnimationFrame(id);
-  }, []); // run once after mount
+  const futureFeatures = [
+    { icon: "⚔️", text: "1v1 Matches" },
+    { icon: "👥", text: "Clans" },
+    { icon: "👥", text: "News" },
+  ];
+  const { user } = useAuth(); // 👈 verificăm dacă e logat sau nu
 
   // Fun live counters (mock)
   const [playersOnline, setPlayersOnline] = useState(1243);
@@ -107,10 +71,10 @@ export const LandingPage = () => {
         <div className="w-full max-w-6xl mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
           {/* Left: Headline & CTAs */}
           <div className="bg-green-950/70 border border-green-900 rounded-xl p-6 md:p-8 backdrop-blur-sm shadow-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-800/70 border border-green-700 text-xs uppercase tracking-wide mb-4">
+            {/* <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-800/70 border border-green-700 text-xs uppercase tracking-wide mb-4">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Season 1 • New
-            </div>
+            </div> */}
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
               ⚽ Prove Your{" "}
@@ -133,7 +97,17 @@ export const LandingPage = () => {
                 </span>
               ))}
             </div>
-
+            <div className="flex items-center flex-wrap gap-2 mt-5">
+              <h1>Coming Soon: </h1>
+              {futureFeatures.map((f, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-900/60 border border-green-800 text-sm"
+                >
+                  <span className="text-lg">{f.icon}</span> {f.text}
+                </span>
+              ))}
+            </div>
             {/* CTAs */}
             <div className="flex xs:flex-wrap gap-2 xs:gap-3 mt-6">
               <Link to="/games">
@@ -153,7 +127,7 @@ export const LandingPage = () => {
               </Link>
             </div>
 
-            {/* Live stats */}
+            {/* Live stats
             <div className="grid grid-cols-3 gap-3 mt-6 text-center">
               <div className="bg-green-900/50 rounded-lg p-3 border border-green-800">
                 <div className="text-xs text-green-300/90">Players Online</div>
@@ -173,7 +147,7 @@ export const LandingPage = () => {
                   #{yourRank}
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Right: Action Panel */}
@@ -296,62 +270,7 @@ export const LandingPage = () => {
           </div>
         </div>
 
-        {/* GAMES SLIDER */}
-        <div className="bg-green-950 bg-opacity-80 flex flex-col items-center px-8 justify-center mb-12 py-16 sm:px-12 md:px-16 w-11/12 sm:w-2/3 rounded-lg">
-          <div className="w-full max-w-6xl relative">
-            <Swiper
-              modules={[Navigation, Pagination]}
-              pagination={{ clickable: true }}
-              loop={true}
-              spaceBetween={16}
-              breakpoints={{
-                320: { slidesPerView: 1 },
-                640: { slidesPerView: 2 },
-                768: { slidesPerView: 3 },
-                1024: { slidesPerView: 4 },
-              }}
-              className="pb-12"
-              onSwiper={(swiper) => {
-                // store instance; we’ll wire buttons in useEffect
-                swiperRef.current = swiper;
-              }}
-            >
-              {games.map((game, idx) => (
-                <SwiperSlide key={idx}>
-                  <div className="bg-green-800 bg-opacity-90 shadow-lg rounded-lg pb-8 p-4 sm:p-6 text-center hover:shadow-2xl transition transform hover:scale-105">
-                    <div className="text-4xl sm:text-5xl mb-4 text-yellow-400">
-                      {game.icon}
-                    </div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
-                      {game.name}
-                    </h3>
-                    <Link to={game.link}>
-                      <button className="bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded hover:bg-yellow-600 transition text-sm sm:text-base">
-                        Play
-                      </button>
-                    </Link>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-
-            {/* Custom arrows */}
-            <button
-              ref={prevRef}
-              className="custom-prev absolute top-1/2 -left-16 -translate-y-1/2 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold transition hover:scale-110"
-              aria-label="Previous"
-            >
-              ‹
-            </button>
-            <button
-              ref={nextRef}
-              className="custom-next absolute top-1/2 -right-16 -translate-y-1/2 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-black w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-2xl font-bold transition hover:scale-110"
-              aria-label="Next"
-            >
-              ›
-            </button>
-          </div>
-        </div>
+        <GamesSlider user={user} />
       </div>
     </div>
   );
