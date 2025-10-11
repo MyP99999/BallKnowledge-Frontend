@@ -8,6 +8,8 @@ import { useAuth } from "../context/AuthContext";
 import { GamesSlider } from "../components/GamesSlider";
 import { Leaderboard } from "../components/Leaderboard";
 import { Clans } from "../components/Clans";
+import { SideAd } from "../components/SideAd";
+import { BottomAd } from "../components/BottomAd";
 
 export const LandingPage = () => {
   // Mock data
@@ -61,6 +63,9 @@ export const LandingPage = () => {
     >
       {/* overlay */}
       <Overlay />
+      {/* SIDE ADS */}
+      <SideAd position="left" />
+      <SideAd position="right" />
 
       {/* CONTENT */}
       <div className="relative z-10 w-full flex flex-col items-center px-4">
@@ -238,9 +243,11 @@ export const LandingPage = () => {
           <Leaderboard leaderboard={leaderboard} />
           <Clans />
         </div>
-        
+
         <GamesSlider user={user} />
       </div>
+      {/* Bottom Ad (mobile only) */}
+      <BottomAd />
     </div>
   );
 };
