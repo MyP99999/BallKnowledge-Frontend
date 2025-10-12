@@ -64,8 +64,8 @@ export const LandingPage = () => {
       {/* overlay */}
       <Overlay />
       {/* SIDE ADS */}
-      <SideAd position="left" />
-      <SideAd position="right" />
+      {/* <SideAd position="left" />
+      <SideAd position="right" /> */}
 
       {/* CONTENT */}
       <div className="relative z-10 w-full flex flex-col items-center px-4">

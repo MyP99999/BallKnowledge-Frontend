@@ -169,7 +169,7 @@ export default function Navbar() {
                 >
                   <button className="flex items-center focus:outline-none">
                     <div className="w-10 h-10 rounded-full bg-yellow-500 text-black font-bold flex items-center justify-center">
-                      {user.name ? user.name[0].toUpperCase() : "U"}
+                      {user.username[0].toUpperCase()}
                     </div>
                   </button>
                 </NavLink>

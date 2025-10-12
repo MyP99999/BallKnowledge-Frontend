@@ -12,7 +12,7 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-green-900 text-white">
       {/* Sidebar */}
-      <aside className="w-64 bg-green-950 p-4 flex flex-col gap-2">
+      <aside className="w-64 bg-green-950 p-4 flex flex-col gap-2 mt-16">
         <h1 className="text-xl font-bold mb-6">⚽ Admin Panel</h1>
         <NavLink to="/admin/users" className={linkClass}>
           👥 Users & Stats
