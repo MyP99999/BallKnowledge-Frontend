@@ -23,7 +23,7 @@ api.interceptors.response.use(
   (error) => {
     if (
       error.response &&
-      (error.response.status === 401 || error.response.status === 403)
+      (error.response.status === 401 || error.response.status === 403 || error.response.status === 500)
     ) {
       // Clear stored token
       localStorage.removeItem("accessToken");

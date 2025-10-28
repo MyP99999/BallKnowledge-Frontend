@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { StatPill } from "./StatPill";
 import Tooltip from "./Tooltip";
 import { useAuth } from "../context/AuthContext";
+import api, { apiNonAuth } from "../api/axios";
 
 const ringBg = (pct) =>
   `conic-gradient(#f59e0b ${pct}%, rgba(255,255,255,0.10) 0)`;
@@ -45,8 +46,8 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
 
-  const totalPoints = 1250;
-  const rank = 1234;
+  const [totalPoints, setTotalPoints] = useState(0); // ✅ start from 0
+  const [rank, setRank] = useState(null);
 
   const { user, logout } = useAuth();
 
@@ -79,6 +80,26 @@ export default function Navbar() {
     `block px-3 my-1 py-1 rounded hover:text-yellow-400 bg-green-950 hover:bg-green-900 ${
       isActive ? "text-yellow-400 font-bold" : "text-white"
     }`;
+
+  useEffect(() => {
+    const fetchPointsAndRank = async () => {
+      try {
+        if (!user?.id) return;
+
+        // Points
+        const p = await api.get(`/user/points/${user.id}`);
+        setTotalPoints(p.data);
+
+        // Rank
+        const r = await api.get(`/user/rank/${user.id}`);
+        setRank(r.data);
+      } catch (e) {
+        console.error("Error fetching points/rank:", e);
+      }
+    };
+
+    fetchPointsAndRank();
+  }, [user]);
 
   return (
     <nav className="bg-green-950 text-white w-full shadow-md relative border-b">
@@ -164,9 +185,7 @@ export default function Navbar() {
             ) : (
               <div className="relative group">
                 {/* Avatar */}
-                <NavLink
-                  to="/profile"
-                >
+                <NavLink to="/profile">
                   <button className="flex items-center focus:outline-none">
                     <div className="w-10 h-10 rounded-full bg-yellow-500 text-black font-bold flex items-center justify-center">
                       {user.username[0].toUpperCase()}
