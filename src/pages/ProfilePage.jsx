@@ -1,11 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Overlay } from "../components/Overlay";
 import { useAuth } from "../context/AuthContext";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import api from "../api/axios";
 
 export function ProfilePage() {
   const { user } = useAuth();
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [totalPoints, setTotalPoints] = useState(0); 
+  const [rank, setRank] = useState(null);
+  const isGoogleUser = user.isExternalAuth;
+
+    useEffect(() => {
+    const fetchPointsAndRank = async () => {
+      try {
+        if (!user?.id) return;
+
+        // Points
+        const p = await api.get(`/user/points/${user.id}`);
+        setTotalPoints(p.data);
+
+        // Rank
+        const r = await api.get(`/user/rank/${user.id}`);
+        setRank(r.data);
+      } catch (e) {
+        console.error("Error fetching points/rank:", e);
+      }
+    };
+
+    fetchPointsAndRank();
+  }, [user]);
 
   if (!user) {
     return (
@@ -15,8 +39,6 @@ export function ProfilePage() {
       </div>
     );
   }
-
-  const isGoogleUser = user.isExternalAuth;
 
   return (
     <div className="relative min-h-screen bg-green-950 text-white">
@@ -44,12 +66,12 @@ export function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
             <div className="bg-green-800/40 rounded-xl p-6 text-center shadow-md hover:bg-green-800/60 transition">
               <p className="text-yellow-400 text-2xl">⚽</p>
-              <p className="text-2xl font-bold mt-2">1250</p>
+              <p className="text-2xl font-bold mt-2">{totalPoints}</p>
               <p className="text-gray-400 text-sm">Total Points</p>
             </div>
             <div className="bg-green-800/40 rounded-xl p-6 text-center shadow-md hover:bg-green-800/60 transition">
               <p className="text-purple-400 text-2xl">🏆</p>
-              <p className="text-2xl font-bold mt-2">#1234</p>
+              <p className="text-2xl font-bold mt-2">#{rank}</p>
               <p className="text-gray-400 text-sm">Global Rank</p>
             </div>
             <div className="bg-green-800/40 rounded-xl p-6 text-center shadow-md hover:bg-green-800/60 transition">

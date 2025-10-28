@@ -153,7 +153,7 @@ export default function Navbar() {
               <StatPill
                 icon="🏆"
                 label="Rank"
-                value={`#${rank}`}
+                value={`#${rank ? rank : 'N/A'}`}
                 color="purple"
               />
             </Tooltip>
