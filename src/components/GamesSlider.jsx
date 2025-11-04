@@ -10,14 +10,14 @@ import "swiper/css/pagination";
 export const GamesSlider = ({ user }) => {
   const games = [
     { name: "Quiz", icon: "🛡️", link: "/quiz" },
-    { name: "Match ", icon: "❓", link: "/match" },
-    { name: "Guess the Player", icon: "💰", link: "/match" },
-    // { name: "Transfer Market", icon: "💰", link: "/quiz" },
-    // { name: "Stadium Guess", icon: "🏟️", link: "/quiz" },
-    // { name: "Logo Quiz", icon: "🛡️", link: "/quiz" },
-    // { name: "Transfer Market", icon: "💰", link: "/quiz" },
-    // { name: "Stadium Guess", icon: "🏟️", link: "/quiz" },
+    { name: "Match", icon: "❓", link: "/match" },
+    { name: "Guess the Player", icon: "🧠", link: "/guess-player" },
+
+    // 🔥 New mini-games
+    { name: "Propose Question", icon: "✍️", link: "/propose" },
+    { name: "Approve Questions", icon: "✅", link: "/approve" },
   ];
+
   const prevRef = useRef(null);
   const nextRef = useRef(null);
   const swiperRef = useRef(null);
@@ -27,17 +27,13 @@ export const GamesSlider = ({ user }) => {
     const swiper = swiperRef.current;
     if (!swiper) return;
 
-    // Wait one microtask so refs are attached
     const id = requestAnimationFrame(() => {
       if (!prevRef.current || !nextRef.current) return;
 
-      // Make sure navigation params exist and are enabled
-      if (!swiper.params.navigation)
-        swiper.params.navigation = { enabled: true };
+      if (!swiper.params.navigation) swiper.params.navigation = { enabled: true };
       swiper.params.navigation.prevEl = prevRef.current;
       swiper.params.navigation.nextEl = nextRef.current;
 
-      // Re-init navigation cleanly
       if (swiper.navigation) {
         swiper.navigation.destroy();
         swiper.navigation.init();
@@ -78,6 +74,7 @@ export const GamesSlider = ({ user }) => {
                 <h3 className="text-lg sm:text-xl text-center font-semibold text-white mb-3">
                   {game.name}
                 </h3>
+
                 <div className="flex gap-2">
                   {/* PLAY button - only enabled if logged in */}
                   <Link to={user ? game.link : "#"}>
@@ -89,14 +86,18 @@ export const GamesSlider = ({ user }) => {
                           : "bg-gray-600 text-gray-300 cursor-not-allowed"
                       }`}
                     >
-                      Play
+                      {game.name === "Propose Question" || game.name === "Approve Questions"
+                        ? "Open"
+                        : "Play"}
                     </button>
                   </Link>
 
-                  {/* PRACTICE button - always enabled */}
+                  {/* PRACTICE / Preview - always enabled */}
                   <Link to={game.link}>
                     <button className="bg-transparent border border-yellow-400 text-yellow-300 px-5 py-2 rounded-lg font-semibold hover:bg-yellow-500/10 transition">
-                      Practice
+                      {game.name === "Propose Question" || game.name === "Approve Questions"
+                        ? "Preview"
+                        : "Practice"}
                     </button>
                   </Link>
                 </div>
@@ -104,9 +105,8 @@ export const GamesSlider = ({ user }) => {
                 {/* Info if user not logged in */}
                 {!user && (
                   <p className="text-xs text-red-300 mt-2 text-center">
-                    🔑 Log in to play for points & leaderboard. Try{" "}
-                    <span className="font-bold text-yellow-400">Practice</span>{" "}
-                    instead!
+                    🔑 Log in to access this feature. You can still{" "}
+                    <span className="font-bold text-yellow-400">Preview</span>.
                   </p>
                 )}
               </div>

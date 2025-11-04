@@ -18,6 +18,8 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
+import ApproveQuestionsPage from "./pages/ApproveQuestionsPage";
+import ProposeQuestionPage from "./pages/ProposeQuestionPage";
 
 function App() {
   const { user, loading } = useAuth();
@@ -49,6 +51,16 @@ function App() {
 
           <Route path="/quiz" element={<QuizGame />} />
           <Route path="/match" element={<MatchGame />} />
+          <Route path="/propose" element={
+            <ProtectedRoute>
+              <ProposeQuestionPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/approve" element={
+            <ProtectedRoute>
+              <ApproveQuestionsPage />
+            </ProtectedRoute>
+          } />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/google-callback" element={<GoogleCallback />} />

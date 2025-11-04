@@ -63,7 +63,7 @@ export function ProfilePage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
             <div className="bg-green-800/40 rounded-xl p-6 text-center shadow-md hover:bg-green-800/60 transition">
               <p className="text-yellow-400 text-2xl">⚽</p>
               <p className="text-2xl font-bold mt-2">{totalPoints}</p>
@@ -74,11 +74,11 @@ export function ProfilePage() {
               <p className="text-2xl font-bold mt-2">#{rank}</p>
               <p className="text-gray-400 text-sm">Global Rank</p>
             </div>
-            <div className="bg-green-800/40 rounded-xl p-6 text-center shadow-md hover:bg-green-800/60 transition">
+            {/* <div className="bg-green-800/40 rounded-xl p-6 text-center shadow-md hover:bg-green-800/60 transition">
               <p className="text-red-400 text-2xl">❤️</p>
               <p className="text-2xl font-bold mt-2">5 / 5</p>
               <p className="text-gray-400 text-sm">Lives</p>
-            </div>
+            </div> */}
           </div>
 
           {/* Actions */}

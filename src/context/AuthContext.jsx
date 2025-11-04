@@ -5,24 +5,34 @@ import api from "../api/axios";
 
 const AuthContext = createContext();
 
+function decodeJwtPayload(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+}
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // {email, username, roles}
+  const [user, setUser] = useState(null); // {id, email, username, roles}
   const [loading, setLoading] = useState(true);
 
-  // Restore user from localStorage on app start
+  // Restore user from accessToken on app start
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
+      const payload = decodeJwtPayload(token);
+      if (payload) {
         setUser({
-          id: payload.id,
+          id: payload.id ?? payload.userId ?? null,
           email: payload.sub,
           username: payload.username || payload.sub,
           roles: payload.roles || [],
         });
-      } catch (err) {
-        console.error("Failed to decode token", err);
+      } else {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
       }
@@ -32,27 +42,35 @@ export const AuthProvider = ({ children }) => {
 
   const register = async ({ username, email, password }) => {
     const data = await authService.signup({ username, email, password });
-
-    // backend should return tokens after signup just like login
     if (data?.token) {
-      const payload = JSON.parse(atob(data.token.split(".")[1]));
-      setUser({
-        email: payload.sub,
-        username: payload.username || username,
-        roles: payload.roles || [],
-      });
+      localStorage.setItem("accessToken", data.token);
+      if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+      const payload = decodeJwtPayload(data.token);
+      if (payload) {
+        setUser({
+          id: payload.id ?? payload.userId ?? null,
+          email: payload.sub,
+          username: payload.username || username,
+          roles: payload.roles || [],
+        });
+      }
     }
-
     return data;
+    // If signup doesn't return tokens, keep as-is and rely on subsequent login.
   };
 
   const login = async (credentials) => {
     const data = await authService.signin(credentials);
-    const payload = JSON.parse(atob(data.token.split(".")[1]));
+    // Save tokens
+    localStorage.setItem("accessToken", data.token);
+    if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+
+    const payload = decodeJwtPayload(data.token);
     setUser({
-      email: payload.sub,
-      username: payload.username || payload.sub,
-      roles: payload.roles || [],
+      id: payload?.id ?? payload?.userId ?? null,
+      email: payload?.sub,
+      username: payload?.username || payload?.sub,
+      roles: payload?.roles || [],
     });
     return data;
   };
@@ -62,13 +80,16 @@ export const AuthProvider = ({ children }) => {
 
     // Save tokens
     localStorage.setItem("accessToken", res.data.token);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
+    if (res.data.refreshToken) {
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+    }
 
-    // Decode JWT payload
-    const payload = JSON.parse(atob(res.data.token.split(".")[1]));
+    const payload = decodeJwtPayload(res.data.token);
     setUser({
-      email: payload.sub,
-      roles: payload.roles || [],
+      id: payload?.id ?? payload?.userId ?? null,
+      email: payload?.sub,
+      username: payload?.username || payload?.sub,
+      roles: payload?.roles || [],
       isExternalAuth: true,
     });
 
@@ -79,30 +100,28 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     setUser(null);
+    // optional: navigate to /login here
   };
 
   const refresh = async () => {
     const data = await authService.refresh();
-    const payload = JSON.parse(atob(data.token.split(".")[1]));
+    // Save tokens
+    localStorage.setItem("accessToken", data.token);
+    if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+
+    const payload = decodeJwtPayload(data.token);
     setUser({
-      email: payload.sub,
-      username: payload.username || payload.sub,
-      roles: payload.roles || [],
+      id: payload?.id ?? payload?.userId ?? null,
+      email: payload?.sub,
+      username: payload?.username || payload?.sub,
+      roles: payload?.roles || [],
     });
     return data;
   };
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        register,
-        login,
-        googleLogin,
-        logout,
-        refresh,
-        loading,
-      }}
+      value={{ user, register, login, googleLogin, logout, refresh, loading }}
     >
       {children}
     </AuthContext.Provider>
