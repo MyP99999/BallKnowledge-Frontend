@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api/axios";
-import { Overlay } from "../components/Overlay";
+import { Overlay } from "../components/layout/Overlay";
 
 export function VerifyPage() {
   const [searchParams] = useSearchParams();

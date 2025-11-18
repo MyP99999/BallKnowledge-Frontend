@@ -1,8 +1,8 @@
 // src/pages/LeaderboardPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Overlay } from "../components/Overlay";
 import { useAuth } from "../context/AuthContext"; // 👈 to get logged user
 import api from "../api/axios";
+import { Overlay } from "../components/layout/Overlay";
 
 const PAGE_SIZE = 10;
 

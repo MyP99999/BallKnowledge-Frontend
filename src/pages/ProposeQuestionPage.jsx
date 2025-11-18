@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
-import { Overlay } from "../components/Overlay";
+import { Overlay } from "../components/layout/Overlay";
 
 export default function ProposeQuestionPage() {
   const { user } = useAuth();

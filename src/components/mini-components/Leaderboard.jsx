@@ -1,7 +1,7 @@
 // src/components/Leaderboard.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api, { apiNonAuth } from "../api/axios";
+import api from "../../api/axios";
 
 export const Leaderboard = () => {
   const [leaderboardUsers, setleaderboardUsers] = useState([]);

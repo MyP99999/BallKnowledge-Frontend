@@ -1,15 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Overlay } from "../components/Overlay";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { useAuth } from "../context/AuthContext";
-import { GamesSlider } from "../components/GamesSlider";
-import { Leaderboard } from "../components/Leaderboard";
-import { Clans } from "../components/Clans";
-import { SideAd } from "../components/SideAd";
-import { BottomAd } from "../components/BottomAd";
+import { Overlay } from "../components/layout/Overlay";
+import { Leaderboard } from "../components/mini-components/Leaderboard";
+import { Clans } from "../components/mini-components/Clans";
+import { GamesSlider } from "../components/mini-components/GamesSlider";
+import { BottomAd } from "../components/layout/BottomAd";
 
 export const LandingPage = () => {
   // Mock data
@@ -237,14 +236,13 @@ export const LandingPage = () => {
             </div>
           </div>
         </div>
+        <GamesSlider user={user} />
 
         {/* LEADERBOARD & CLANS */}
         <div className="w-full my-16 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
           <Leaderboard leaderboard={leaderboard} />
           <Clans />
         </div>
-
-        <GamesSlider user={user} />
       </div>
       {/* Bottom Ad (mobile only) */}
       <BottomAd />

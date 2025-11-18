@@ -1,6 +1,6 @@
-import { Overlay } from "../components/Overlay";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Overlay } from "../components/layout/Overlay";
 
 export const LoginPage = () => {
   const { login, googleLogin } = useAuth();

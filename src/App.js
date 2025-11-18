@@ -1,14 +1,9 @@
 import { Routes, Route } from "react-router-dom";
-import Footer from "./components/Footer";
-import Navbar from "./components/Navbar";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
-import { QuizGame } from "./components/QuizGame";
-import { MatchGame } from "./components/MatchGame";
 import { GamesPage } from "./pages/GamesPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
-import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 import GoogleCallback from "./pages/GoogleCallbackPage";
 import { ProfilePage } from "./pages/ProfilePage";
@@ -20,6 +15,12 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import ApproveQuestionsPage from "./pages/ApproveQuestionsPage";
 import ProposeQuestionPage from "./pages/ProposeQuestionPage";
+import Navbar from "./components/layout/Navbar";
+import ProtectedRoute from "./components/layout/ProtectedRoute";
+import { QuizGame } from "./components/games/QuizGame";
+import { MatchGame } from "./components/games/MatchGame";
+import Footer from "./components/layout/Footer";
+import { PracticeQuizGame } from "./components/practice/PracticeQuizGame";
 
 function App() {
   const { user, loading } = useAuth();
@@ -48,9 +49,19 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-          <Route path="/quiz" element={<QuizGame />} />
-          <Route path="/match" element={<MatchGame />} />
+          <Route path="/quiz" element={
+            <ProtectedRoute>
+              <QuizGame />
+            </ProtectedRoute>
+          } />
+          <Route path="/practice-quiz" element={
+            <PracticeQuizGame />
+          } />
+          <Route path="/match" element={
+            <ProtectedRoute>
+              <MatchGame />
+            </ProtectedRoute>
+          } />
           <Route path="/propose" element={
             <ProtectedRoute>
               <ProposeQuestionPage />

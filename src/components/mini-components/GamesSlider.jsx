@@ -9,9 +9,14 @@ import "swiper/css/pagination";
 
 export const GamesSlider = ({ user }) => {
   const games = [
-    { name: "Trivia", icon: "🛡️", link: "/quiz" },
-    { name: "Match", icon: "❓", link: "/match" },
-    { name: "Guess the Player", icon: "🧠", link: "/guess-player" },
+    {
+      name: "Trivia",
+      icon: "🛡️",
+      link: "/quiz",
+      practiceLink: "/practice-quiz",
+    },
+    // { name: "Match", icon: "❓", link: "/match" },
+    // { name: "Guess the Player", icon: "🧠", link: "/guess-player" },
 
     // 🔥 New mini-games
     { name: "Propose Question", icon: "✍️", link: "/propose" },
@@ -30,7 +35,8 @@ export const GamesSlider = ({ user }) => {
     const id = requestAnimationFrame(() => {
       if (!prevRef.current || !nextRef.current) return;
 
-      if (!swiper.params.navigation) swiper.params.navigation = { enabled: true };
+      if (!swiper.params.navigation)
+        swiper.params.navigation = { enabled: true };
       swiper.params.navigation.prevEl = prevRef.current;
       swiper.params.navigation.nextEl = nextRef.current;
 
@@ -67,52 +73,60 @@ export const GamesSlider = ({ user }) => {
             swiperRef.current = swiper;
           }}
         >
-          {games.map((game, idx) => (
-            <SwiperSlide key={idx}>
-              <div className="bg-green-800 bg-opacity-90 shadow-lg rounded-xl p-6 flex flex-col items-center justify-center h-60 hover:shadow-2xl transition transform hover:scale-105">
-                <div className="text-5xl mb-4 text-yellow-400">{game.icon}</div>
-                <h3 className="text-lg sm:text-xl text-center font-semibold text-white mb-3">
-                  {game.name}
-                </h3>
+          {games.map((game, idx) =>
+            user || game.practiceLink ? (
+              <SwiperSlide key={idx}>
+                <div className="bg-green-800 bg-opacity-90 shadow-lg rounded-xl p-6 flex flex-col items-center justify-center h-60 hover:shadow-2xl transition transform hover:scale-105">
+                  <div className="text-5xl mb-4 text-yellow-400">
+                    {game.icon}
+                  </div>
 
-                <div className="flex gap-2">
-                  {/* PLAY button - only enabled if logged in */}
-                  <Link to={user ? game.link : "#"}>
-                    <button
-                      disabled={!user}
-                      className={`px-5 py-2 rounded-lg font-semibold transition ${
-                        user
-                          ? "bg-yellow-500 text-black hover:bg-yellow-600"
-                          : "bg-gray-600 text-gray-300 cursor-not-allowed"
-                      }`}
-                    >
-                      {game.name === "Propose Question" || game.name === "Approve Questions"
-                        ? "Open"
-                        : "Play"}
-                    </button>
-                  </Link>
+                  <h3 className="text-lg sm:text-xl text-center font-semibold text-white mb-3">
+                    {game.name}
+                  </h3>
 
-                  {/* PRACTICE / Preview - always enabled */}
-                  <Link to={game.link}>
-                    <button className="bg-transparent border border-yellow-400 text-yellow-300 px-5 py-2 rounded-lg font-semibold hover:bg-yellow-500/10 transition">
-                      {game.name === "Propose Question" || game.name === "Approve Questions"
-                        ? "Preview"
-                        : "Practice"}
-                    </button>
-                  </Link>
+                  <div className="flex gap-2">
+                    {/* PLAY button */}
+                    <Link to={user ? game.link : "#"}>
+                      <button
+                        disabled={!user}
+                        className={`px-5 py-2 rounded-lg font-semibold transition ${
+                          user
+                            ? "bg-yellow-500 text-black hover:bg-yellow-600"
+                            : "bg-gray-600 text-gray-300 cursor-not-allowed"
+                        }`}
+                      >
+                        {game.name === "Propose Question" ||
+                        game.name === "Approve Questions"
+                          ? "Open"
+                          : "Play"}
+                      </button>
+                    </Link>
+
+                    {/* PRACTICE button */}
+                    {game.practiceLink && (
+                      <Link to={game.practiceLink}>
+                        <button className="bg-transparent border border-yellow-400 text-yellow-300 px-5 py-2 rounded-lg font-semibold hover:bg-yellow-500/10 transition">
+                          {game.name === "Propose Question" ||
+                          game.name === "Approve Questions"
+                            ? "Preview"
+                            : "Practice"}
+                        </button>
+                      </Link>
+                    )}
+                  </div>
+
+                  {!user && (
+                    <p className="text-xs text-red-300 mt-2 text-center">
+                      🔑 Log in to access this feature. You can still 
+                      <span className="font-bold text-yellow-400"> Practice</span> without an account
+                      .
+                    </p>
+                  )}
                 </div>
-
-                {/* Info if user not logged in */}
-                {!user && (
-                  <p className="text-xs text-red-300 mt-2 text-center">
-                    🔑 Log in to access this feature. You can still{" "}
-                    <span className="font-bold text-yellow-400">Preview</span>.
-                  </p>
-                )}
-              </div>
-            </SwiperSlide>
-          ))}
-
+              </SwiperSlide>
+            ) : null
+          )}
           {/* ➕ Extra "coming soon" card */}
           <SwiperSlide>
             <div className="bg-green-800 bg-opacity-90 shadow-lg rounded-xl p-6 flex flex-col items-center justify-center h-60 hover:shadow-2xl transition transform hover:scale-105">

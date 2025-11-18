@@ -38,11 +38,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // if (error?.response && [401, 403, 500].includes(error.response.status)) {
-    //   localStorage.removeItem("accessToken");
-    //   localStorage.removeItem("refreshToken");
-    //   window.location.href = "/login";
-    // }
+    if (error?.response && [403, 500].includes(error.response.status)) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/login";
+    }
     return Promise.reject(error);
   }
 );

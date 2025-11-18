@@ -1,6 +1,6 @@
 // src/pages/ForgotPasswordPage.jsx
 import { useState } from "react";
-import { Overlay } from "../components/Overlay";
+import { Overlay } from "../components/layout/Overlay";
 import { forgotPassword } from "../api/authService";
 
 export default function ForgotPasswordPage() {

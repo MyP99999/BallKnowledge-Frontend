@@ -5,11 +5,11 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Link } from "react-router-dom";
-import { Overlay } from "../components/Overlay";
-import { GamesSlider } from "../components/GamesSlider";
+import { Overlay } from "../components/layout/Overlay";
 import { useAuth } from "../context/AuthContext";
-import { Leaderboard } from "../components/Leaderboard";
-import { Clans } from "../components/Clans";
+import { GamesSlider } from "../components/mini-components/GamesSlider";
+import { Leaderboard } from "../components/mini-components/Leaderboard";
+import { Clans } from "../components/mini-components/Clans";
 
 export const GamesPage = () => {
   const games = [

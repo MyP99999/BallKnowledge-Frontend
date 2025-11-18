@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { StatPill } from "./StatPill";
-import Tooltip from "./Tooltip";
-import { useAuth } from "../context/AuthContext";
-import api, { apiNonAuth } from "../api/axios";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../api/axios";
+import { StatPill } from "../mini-components/StatPill";
+import Tooltip from "../mini-components/Tooltip";
 
 const ringBg = (pct) =>
   `conic-gradient(#f59e0b ${pct}%, rgba(255,255,255,0.10) 0)`;
@@ -117,8 +117,9 @@ export default function Navbar() {
           </NavLink>
 
           {/* Stats bar */}
-          <div className="flex items-center gap-2 bg-green-800/60 rounded-full px-2 py-1 shadow-sm backdrop-blur">
-            {/* Lives
+          {user && (
+            <div className="flex items-center gap-2 bg-green-800/60 rounded-full px-2 py-1 shadow-sm backdrop-blur">
+              {/* Lives
             <Tooltip
               text={
                 lives >= maxLives
@@ -136,28 +137,29 @@ export default function Navbar() {
 
             <div className="h-6 w-px bg-green-600/60" /> */}
 
-            {/* Points */}
-            <Tooltip text="Total Ball Knowledge points earned across all games">
-              <StatPill
-                icon="⚽"
-                label="Points"
-                value={totalPoints}
-                color="yellow"
-              />
-            </Tooltip>
+              {/* Points */}
+              <Tooltip text="Total Ball Knowledge points earned across all games">
+                <StatPill
+                  icon="⚽"
+                  label="Points"
+                  value={totalPoints}
+                  color="yellow"
+                />
+              </Tooltip>
 
-            <div className="h-6 w-px bg-green-600/60" />
+              <div className="h-6 w-px bg-green-600/60" />
 
-            {/* Rank */}
-            <Tooltip text="Your current global leaderboard position">
-              <StatPill
-                icon="🏆"
-                label="Rank"
-                value={`#${rank ? rank : "N/A"}`}
-                color="purple"
-              />
-            </Tooltip>
-          </div>
+              {/* Rank */}
+              <Tooltip text="Your current global leaderboard position">
+                <StatPill
+                  icon="🏆"
+                  label="Rank"
+                  value={`#${rank ? rank : "N/A"}`}
+                  color="purple"
+                />
+              </Tooltip>
+            </div>
+          )}
 
           {/* Desktop links */}
           <div className="hidden lg:flex space-x-6">

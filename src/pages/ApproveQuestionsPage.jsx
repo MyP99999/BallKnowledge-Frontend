@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
-import { Overlay } from "../components/Overlay";
+import { Overlay } from "../components/layout/Overlay";
 
 function ProposalCard({ p, onVote, voting, isFading }) {
   const threshold = p.requiredApprovals ?? 10;

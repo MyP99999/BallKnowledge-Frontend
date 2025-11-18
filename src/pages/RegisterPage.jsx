@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Overlay } from "../components/Overlay";
 import { useAuth } from "../context/AuthContext";
+import { Overlay } from "../components/layout/Overlay";
 
 export const RegisterPage = () => {
   const { register, googleLogin } = useAuth();

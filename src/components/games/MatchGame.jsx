@@ -1,6 +1,6 @@
 // src/components/MatchGame.jsx
 import { useMemo, useState } from "react";
-import { Overlay } from "./Overlay";
+import { Overlay } from "../layout/Overlay";
 import { Link } from "react-router-dom";
 
 const baseData = {

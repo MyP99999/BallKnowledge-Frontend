@@ -1,8 +1,8 @@
 // src/pages/ResetPasswordPage.jsx
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Overlay } from "../components/Overlay";
 import { resetPassword } from "../api/authService";
+import { Overlay } from "../components/layout/Overlay";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();

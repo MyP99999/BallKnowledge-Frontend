@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Overlay } from "../components/Overlay";
 import { useAuth } from "../context/AuthContext";
-import ChangePasswordModal from "../components/ChangePasswordModal";
 import api from "../api/axios";
+import ChangePasswordModal from "../components/mini-components/ChangePasswordModal";
+import { Overlay } from "../components/layout/Overlay";
 
 export function ProfilePage() {
   const { user } = useAuth();
