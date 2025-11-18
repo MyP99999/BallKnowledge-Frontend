@@ -1,238 +1,212 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Overlay } from "./Overlay";
 import api from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
+// Sounds
 const correctSound = new Audio("/sounds/correct.wav");
 const wrongSound = new Audio("/sounds/wrong.wav");
 const gameOverSound = new Audio("/sounds/gameover.wav");
 
 const totalTime = 15;
-const SAVE_KEY = "quizGameState";
-const EXPIRY_MINUTES = 30;
+
+// Update backend points
+async function updateUserPoints(userId, amount) {
+  try {
+    await api.post(`/user/points/increase/${userId}/${amount}`);
+  } catch (err) {
+    console.error("Failed to update points:", err);
+  }
+}
 
 export const QuizGame = () => {
-  const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [lives, setLives] = useState(5);
-  const [timeLeft, setTimeLeft] = useState(totalTime);
-  const [gameOver, setGameOver] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [usedFiftyFifty, setUsedFiftyFifty] = useState(false);
-  const [visibleOptions, setVisibleOptions] = useState([]);
-  const [usedExtraTime, setUsedExtraTime] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  const { user, refreshStats } = useAuth();
 
-  const fetchQuestions = async () => {
+  // Main states
+  const [question, setQuestion] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(totalTime);
+  const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(3);
+  const [loading, setLoading] = useState(true);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+
+  // Rank tracking
+  const [backendPoints, setBackendPoints] = useState(0);
+  const [oldRank, setOldRank] = useState(null);
+  const [newRank, setNewRank] = useState(null);
+  const [gameOver, setGameOver] = useState(false);
+
+  // 🟩 Fetch ONE question safely
+  const loadNextQuestion = async () => {
     try {
       setLoading(true);
-      setLoadError(null);
-      const res = await api.get("/questions/random", { params: { amount: 5 } });
-      setQuestions(res.data);
-      setCurrentIndex(0);
-      setVisibleOptions(res.data[0]?.options ?? []);
-      setScore(0);
-      setLives(5);
+
+      const res = await api.get("/questions/random", { params: { amount: 1 } });
+
+      const q = Array.isArray(res.data) ? res.data[0] : res.data;
+
+      if (!q || !q.question) {
+        console.error("Invalid question received:", q);
+        return;
+      }
+
+      setQuestion(q);
+      setSelectedAnswer(null);
       setTimeLeft(totalTime);
-      setGameOver(false);
-      setUsedFiftyFifty(false);
-      setUsedExtraTime(false);
     } catch (err) {
-      setLoadError(err?.message || "Failed to load questions");
+      console.error("Failed to load question", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Load first question
   useEffect(() => {
-    const saved = localStorage.getItem(SAVE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const now = Date.now();
-      if (
-        parsed.timestamp &&
-        now - parsed.timestamp > EXPIRY_MINUTES * 60 * 1000
-      ) {
-        localStorage.removeItem(SAVE_KEY);
-      } else if (parsed.questions?.length) {
-        setQuestions(parsed.questions);
-        setCurrentIndex(parsed.currentIndex || 0);
-        setScore(parsed.score || 0);
-        setLives(parsed.lives ?? 5);
-        setTimeLeft(parsed.timeLeft ?? totalTime);
-        setUsedFiftyFifty(parsed.usedFiftyFifty || false);
-        setUsedExtraTime(parsed.usedExtraTime || false);
-        setGameOver(parsed.gameOver || false);
-        setVisibleOptions(parsed.questions[parsed.currentIndex]?.options ?? []);
-        setLoading(false);
-        return;
-      }
-    }
-    fetchQuestions();
+    loadNextQuestion();
   }, []);
 
-  const currentQuestion = useMemo(
-    () => (questions.length ? questions[currentIndex] : null),
-    [questions, currentIndex]
-  );
-
+  // Timer logic
   useEffect(() => {
-    if (currentQuestion) setVisibleOptions(currentQuestion.options);
-    else setVisibleOptions([]);
-  }, [currentQuestion]);
-
-  useEffect(() => {
-    if (!currentQuestion || gameOver) return;
+    if (!question || gameOver) return;
     if (timeLeft <= 0) {
       handleAnswer(null);
       return;
     }
-    const t = setTimeout(() => setTimeLeft((p) => p - 1), 1000);
-    return () => clearTimeout(t);
-  }, [timeLeft, currentQuestion, gameOver]);
 
+    const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [timeLeft, question, gameOver]);
+
+  // 🟥 Handle answer
   const handleAnswer = (selected) => {
-    if (!currentQuestion) return;
+    if (!question) return;
+
     setSelectedAnswer(selected);
 
-    const correct = (currentQuestion.answers || [])
+    const answers = question.answers ?? [];
+    const correct = answers
       .map((a) => a.trim().toLowerCase())
       .includes(selected?.trim().toLowerCase());
 
-    console.log(
-      "Selected:",
-      selected,
-      "| Expected:",
-      currentQuestion.answers,
-      "| Match:",
-      correct
-    );
-
-    const points = correct ? 5 + Math.floor(timeLeft * 1.5) : 0;
-
     if (correct) {
       correctSound.play().catch(() => {});
-      setScore((p) => p + points);
+      setScore((s) => s + 1);
     } else {
       wrongSound.play().catch(() => {});
-      setLives((p) => p - 1);
+      setScore((s) => s - 1);
+      setLives((l) => l - 1);
+    }
+
+    if (user) {
+      const change = correct ? 1 : -1;
+      updateUserPoints(user.id, change);
+      setBackendPoints((p) => p + change);
+    }
+
+    if (!correct && lives - 1 <= 0) {
+      finalizeGame();
+      return;
     }
 
     setTimeout(() => {
-      setSelectedAnswer(null);
-      setVisibleOptions([]);
-      if (!correct && lives - 1 <= 0) {
-        gameOverSound.play().catch(() => {});
-        setGameOver(true);
-        localStorage.removeItem(SAVE_KEY);
-        return;
-      }
-      if (currentIndex + 1 < questions.length) {
-        setCurrentIndex((p) => p + 1);
-        setTimeLeft(totalTime);
-        setUsedFiftyFifty(false);
-        setUsedExtraTime(false);
-      } else {
-        setGameOver(true);
-        localStorage.removeItem(SAVE_KEY);
-      }
-    }, 900);
+      loadNextQuestion();
+    }, 800);
   };
 
-  const handleFiftyFifty = () => {
-    if (usedFiftyFifty || !currentQuestion) return;
-    const correctAnswers = currentQuestion.answers || [];
-    const wrongs = currentQuestion.options.filter(
-      (o) => !correctAnswers.includes(o)
-    );
-    if (!wrongs.length) return;
-    const keepOneWrong = wrongs[Math.floor(Math.random() * wrongs.length)];
-    setVisibleOptions(
-      [...correctAnswers, keepOneWrong].sort(() => Math.random() - 0.5)
-    );
-    setUsedFiftyFifty(true);
+  // Game Over logic
+  const finalizeGame = () => {
+    setGameOver(true);
+    gameOverSound.play().catch(() => {});
+
+    if (user) {
+      api.get(`/user/rank/${user.id}`).then((r) => setOldRank(r.data));
+
+      setTimeout(() => {
+        api.get(`/user/rank/${user.id}`).then((r) => setNewRank(r.data));
+
+        // 🔥 Trigger navbar refresh
+        refreshStats();
+      }, 800);
+    }
   };
 
-  const handleExtraTime = () => {
-    if (usedExtraTime || !currentQuestion) return;
-    setTimeLeft((p) => p + 10);
-    setUsedExtraTime(true);
-  };
-
+  // Restart game
   const restartGame = () => {
-    localStorage.removeItem(SAVE_KEY);
-    fetchQuestions();
+    setScore(0);
+    setLives(5);
+    setBackendPoints(0);
+    setOldRank(null);
+    setNewRank(null);
+    setGameOver(false);
+    loadNextQuestion();
   };
 
-  useEffect(() => {
-    if (questions.length === 0) return;
-    const state = {
-      questions,
-      currentIndex,
-      score,
-      lives,
-      timeLeft,
-      usedFiftyFifty,
-      usedExtraTime,
-      gameOver,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-  }, [
-    questions,
-    currentIndex,
-    score,
-    lives,
-    timeLeft,
-    usedFiftyFifty,
-    usedExtraTime,
-    gameOver,
-  ]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-green-700">
-        <Overlay />
-        <p className="text-xl animate-pulse">Loading questions…</p>
-      </div>
-    );
-  }
-
-  if (loadError || !questions.length) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-white bg-green-700 p-6">
-        <p className="text-xl mb-4">
-          {loadError
-            ? `Error: ${loadError}`
-            : "No multiple-choice questions available."}
-        </p>
-        <Link to="/">
-          <button className="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition">
-            Main Menu
-          </button>
-        </Link>
-      </div>
-    );
-  }
-
+  // GAME OVER SCREEN
   if (gameOver) {
+    const improved = oldRank !== null && newRank !== null && newRank < oldRank;
+    const dropped = oldRank !== null && newRank !== null && newRank > oldRank;
+
     return (
-      <div className="min-h-screen flex flex-col bg-green-700 items-center justify-center bg-cover bg-center bg-no-repeat text-white" style={{ backgroundImage: "url('/pitch.jpg')" }}>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat text-white"
+        style={{ backgroundImage: "url('/pitch.jpg')" }}
+      >
         <Overlay />
-        <div className="relative bg-green-950 bg-opacity-80 rounded-lg p-6 py-12 max-w-xl w-full shadow-xl flex items-center justify-center flex-col">
-          <h1 className="text-4xl font-bold mb-4">Game Over</h1>
-          <p className="text-xl mb-4">Final Score: {score}</p>
-          <div className="flex justify-center items-center gap-4">
+
+        <div className="relative p-8 bg-black/60 rounded-2xl shadow-2xl animate-slide-in max-w-lg w-full text-center">
+          <h1 className="text-4xl font-bold mb-4">
+            {backendPoints >= 0 ? "🎉 Great Job!" : "💀 Better Luck Next Time"}
+          </h1>
+
+          <p className="text-3xl font-bold mb-2">
+            Score: {backendPoints >= 0 ? `+${backendPoints}` : backendPoints}
+          </p>
+
+          {oldRank !== null && newRank !== null && (
+            <div className="mt-6">
+              <p className="text-xl">🏅 New Rank</p>
+
+              <p
+                className={`text-4xl font-bold mt-2 ${
+                  improved
+                    ? "text-green-400 animate-pop"
+                    : dropped
+                    ? "text-red-400 animate-shake"
+                    : "text-yellow-300"
+                }`}
+              >
+                #{newRank}
+              </p>
+
+              <p className="text-lg text-gray-300 mt-1">
+                (Previous: #{oldRank})
+              </p>
+
+              {improved && (
+                <p className="text-green-400 font-bold mt-2 animate-glow">
+                  ⬆ Climbed {oldRank - newRank} places!
+                </p>
+              )}
+
+              {dropped && (
+                <p className="text-red-400 font-bold mt-2 animate-shake">
+                  ⬇ Dropped {newRank - oldRank} places.
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-center mt-8 gap-4">
             <button
               onClick={restartGame}
-              className="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition"
+              className="px-6 py-3 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-600"
             >
               Play Again
             </button>
+
             <Link to="/">
-              <button className="bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition">
+              <button className="px-6 py-3 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-600">
                 Main Menu
               </button>
             </Link>
@@ -242,79 +216,77 @@ export const QuizGame = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen flex flex-col bg-green-700 items-center justify-center bg-cover bg-center bg-no-repeat text-white" style={{ backgroundImage: "url('/pitch.jpg')" }}>
-      <Overlay />
-      <div className="relative bg-green-950 bg-opacity-80 rounded-lg p-6 max-w-xl w-full shadow-xl">
-        <h1 className="text-2xl font-bold text-center mb-8">⚽ Ball Knowledge</h1>
+  // LOADING SCREEN
+  if (loading || !question) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white bg-green-800">
+        <Overlay />
+        <p className="text-xl animate-pulse">Loading question…</p>
+      </div>
+    );
+  }
 
-        <div className="flex justify-between w-full max-w-xl mb-2 text-lg font-semibold">
+  // MAIN QUIZ UI
+  const options = question.options ?? [];
+  const answers = question.answers ?? [];
+
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat text-white"
+      style={{ backgroundImage: "url('/pitch.jpg')" }}
+    >
+      <Overlay />
+
+      <div className="relative bg-green-950 bg-opacity-80 rounded-lg p-6 max-w-xl w-full shadow-xl">
+        <h1 className="text-2xl font-bold text-center mb-8">
+          ⚽ Ball Knowledge
+        </h1>
+
+        <div className="flex justify-between text-lg font-semibold mb-3">
           <p>❤️ {lives}</p>
-          <p>📊 Question {currentIndex + 1}/{questions.length}</p>
           <p>🏆 {score}</p>
         </div>
 
-        <div className="w-full max-w-xl bg-gray-700 h-3 rounded-full overflow-hidden mb-2">
+        <div className="w-full bg-gray-700 h-3 rounded-full overflow-hidden mb-2">
           <div
-            className={`${timeLeft <= 5 ? "bg-red-500" : "bg-yellow-500"} h-full transition-all duration-1000`}
+            className={`${
+              timeLeft <= 5 ? "bg-red-500" : "bg-yellow-500"
+            } h-full`}
             style={{ width: `${(timeLeft / totalTime) * 100}%` }}
           />
         </div>
-        <p className="mb-4 flex justify-center items-center">⏱️ {timeLeft}s</p>
 
-        <h2 className="text-xl font-bold mb-6 text-center">
-          {currentQuestion?.question}
+        <p className="mb-4 text-center">⏱️ {timeLeft}s</p>
+
+        <h2 className="text-xl font-bold text-center mb-6">
+          {question.question}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {(visibleOptions || []).map((option, idx) => {
-            const isCorrect = (currentQuestion.answers || [])
+          {options.map((option, idx) => {
+            const isCorrect = answers
               .map((a) => a.trim().toLowerCase())
               .includes(option.trim().toLowerCase());
 
-            let bgClass = "bg-yellow-500 hover:bg-yellow-600";
+            let bg = "bg-yellow-500 hover:bg-yellow-600";
+
             if (selectedAnswer) {
-              if (isCorrect) bgClass = "bg-green-500";
-              else if (option === selectedAnswer) bgClass = "bg-red-500";
-              else bgClass = "bg-gray-500";
+              if (isCorrect) bg = "bg-green-500";
+              else if (selectedAnswer === option) bg = "bg-red-500";
+              else bg = "bg-gray-500";
             }
+
             return (
               <button
                 key={idx}
-                onClick={() => handleAnswer(option)}
                 disabled={!!selectedAnswer}
-                className={`${bgClass} text-black px-4 py-2 rounded font-semibold transition`}
+                onClick={() => handleAnswer(option)}
+                className={`${bg} text-black px-4 py-2 rounded-lg font-semibold`}
               >
                 {option}
               </button>
             );
           })}
-        </div>
-
-        <div className="flex justify-center mt-6 gap-4">
-          <button
-            onClick={handleFiftyFifty}
-            disabled={usedFiftyFifty}
-            className={`px-3 py-2 rounded-full font-bold text-sm transition ${
-              usedFiftyFifty
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-purple-500 hover:bg-purple-600"
-            }`}
-          >
-            🪄 50/50
-          </button>
-
-          <button
-            onClick={handleExtraTime}
-            disabled={usedExtraTime}
-            className={`px-3 py-2 rounded-full font-bold text-sm transition ${
-              usedExtraTime
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-600"
-            }`}
-          >
-            ⏳ +10s
-          </button>
         </div>
       </div>
     </div>

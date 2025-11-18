@@ -9,7 +9,7 @@ import "swiper/css/pagination";
 
 export const GamesSlider = ({ user }) => {
   const games = [
-    { name: "Quiz", icon: "🛡️", link: "/quiz" },
+    { name: "Trivia", icon: "🛡️", link: "/quiz" },
     { name: "Match", icon: "❓", link: "/match" },
     { name: "Guess the Player", icon: "🧠", link: "/guess-player" },
 

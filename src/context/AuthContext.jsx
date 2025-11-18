@@ -19,6 +19,7 @@ function decodeJwtPayload(token) {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // {id, email, username, roles}
   const [loading, setLoading] = useState(true);
+  const [statsTrigger, setStatsTrigger] = useState(0);
 
   // Restore user from accessToken on app start
   useEffect(() => {
@@ -40,11 +41,14 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  const refreshStats = () => setStatsTrigger((x) => x + 1);
+
   const register = async ({ username, email, password }) => {
     const data = await authService.signup({ username, email, password });
     if (data?.token) {
       localStorage.setItem("accessToken", data.token);
-      if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+      if (data.refreshToken)
+        localStorage.setItem("refreshToken", data.refreshToken);
       const payload = decodeJwtPayload(data.token);
       if (payload) {
         setUser({
@@ -63,7 +67,8 @@ export const AuthProvider = ({ children }) => {
     const data = await authService.signin(credentials);
     // Save tokens
     localStorage.setItem("accessToken", data.token);
-    if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+    if (data.refreshToken)
+      localStorage.setItem("refreshToken", data.refreshToken);
 
     const payload = decodeJwtPayload(data.token);
     setUser({
@@ -107,7 +112,8 @@ export const AuthProvider = ({ children }) => {
     const data = await authService.refresh();
     // Save tokens
     localStorage.setItem("accessToken", data.token);
-    if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+    if (data.refreshToken)
+      localStorage.setItem("refreshToken", data.refreshToken);
 
     const payload = decodeJwtPayload(data.token);
     setUser({
@@ -121,7 +127,17 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, register, login, googleLogin, logout, refresh, loading }}
+      value={{
+        user,
+        register,
+        login,
+        googleLogin,
+        logout,
+        refresh,
+        loading,
+        statsTrigger,
+        refreshStats,
+      }}
     >
       {children}
     </AuthContext.Provider>

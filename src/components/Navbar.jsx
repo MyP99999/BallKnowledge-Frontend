@@ -49,7 +49,7 @@ export default function Navbar() {
   const [totalPoints, setTotalPoints] = useState(0); // ✅ start from 0
   const [rank, setRank] = useState(null);
 
-  const { user, logout } = useAuth();
+  const { user, logout, statsTrigger } = useAuth();
 
   const signout = () => {
     setMobileMenuOpen(false);
@@ -99,7 +99,7 @@ export default function Navbar() {
     };
 
     fetchPointsAndRank();
-  }, [user]);
+  }, [user, statsTrigger]); // ← updates when game ends
 
   return (
     <nav className="bg-green-950 text-white w-full shadow-md relative border-b">
@@ -153,7 +153,7 @@ export default function Navbar() {
               <StatPill
                 icon="🏆"
                 label="Rank"
-                value={`#${rank ? rank : 'N/A'}`}
+                value={`#${rank ? rank : "N/A"}`}
                 color="purple"
               />
             </Tooltip>
