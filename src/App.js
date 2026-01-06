@@ -21,6 +21,9 @@ import { QuizGame } from "./components/games/QuizGame";
 import { MatchGame } from "./components/games/MatchGame";
 import Footer from "./components/layout/Footer";
 import { PracticeQuizGame } from "./components/practice/PracticeQuizGame";
+import { NotFoundPage } from "./pages/NotFoundPage";
+import { ClansPage } from "./pages/ClansPage";
+import { GuessTheTeamPage } from "./pages/GuessTheTeam";
 
 function App() {
   const { user, loading } = useAuth();
@@ -62,6 +65,11 @@ function App() {
               <MatchGame />
             </ProtectedRoute>
           } />
+          <Route path="/guessTheTeam" element={
+            <ProtectedRoute>
+              <GuessTheTeamPage />
+            </ProtectedRoute>
+          } />
           <Route path="/propose" element={
             <ProtectedRoute>
               <ProposeQuestionPage />
@@ -80,6 +88,7 @@ function App() {
           {/* ✅ New verify route */}
           <Route path="/verify" element={<VerifyPage />} />
           <Route path="/google-callback" element={<GoogleCallbackPage />} />
+          <Route path="/clans" element={<ClansPage />} />
 
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="users" element={<div>Users & Stats (coming soon)</div>} />
@@ -87,6 +96,7 @@ function App() {
             <Route path="daily" element={<div>Daily Challenge (coming soon)</div>} />
           </Route>
 
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
 

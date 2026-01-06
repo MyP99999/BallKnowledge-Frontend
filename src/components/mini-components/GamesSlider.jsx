@@ -15,7 +15,7 @@ export const GamesSlider = ({ user }) => {
       link: "/quiz",
       practiceLink: "/practice-quiz",
     },
-    // { name: "Match", icon: "❓", link: "/match" },
+    // { name: "Guess The Team", icon: "❓", link: "/guessTheTeam" },
     // { name: "Guess the Player", icon: "🧠", link: "/guess-player" },
 
     // 🔥 New mini-games
