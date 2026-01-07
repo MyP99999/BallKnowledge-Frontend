@@ -9,10 +9,13 @@ import { Leaderboard } from "../components/mini-components/Leaderboard";
 import { Clans } from "../components/mini-components/Clans";
 import { GamesSlider } from "../components/mini-components/GamesSlider";
 import { BottomAd } from "../components/layout/BottomAd";
+import api from "../api/axios"; // ✅ add this
 
 function getSecondsUntilUkMidnight() {
   const now = new Date();
-  const ukNow = new Date(now.toLocaleString("en-GB", { timeZone: "Europe/London" }));
+  const ukNow = new Date(
+    now.toLocaleString("en-GB", { timeZone: "Europe/London" })
+  );
   const nextMidnightUk = new Date(ukNow);
   nextMidnightUk.setHours(24, 0, 0, 0);
   return Math.max(0, Math.floor((nextMidnightUk - ukNow) / 1000));
@@ -53,7 +56,9 @@ export const LandingPage = () => {
   }, []);
 
   // ✅ Daily challenge countdown (UK midnight)
-  const [secondsLeft, setSecondsLeft] = useState(() => getSecondsUntilUkMidnight());
+  const [secondsLeft, setSecondsLeft] = useState(() =>
+    getSecondsUntilUkMidnight()
+  );
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -62,13 +67,55 @@ export const LandingPage = () => {
     return () => clearInterval(id);
   }, []);
 
-  // ✅ Derived display values (must be AFTER secondsLeft exists)
   const hh = String(Math.floor(secondsLeft / 3600)).padStart(2, "0");
   const mm = String(Math.floor((secondsLeft % 3600) / 60)).padStart(2, "0");
   const ss = String(secondsLeft % 60).padStart(2, "0");
 
   const DAY_SECONDS = 24 * 60 * 60;
   const progress = ((DAY_SECONDS - secondsLeft) / DAY_SECONDS) * 100;
+
+  // ✅ Daily Challenge status (WIN/LOSE/PLAYING/NOT_PLAYED/LOGIN_REQUIRED)
+  const [dailyStatus, setDailyStatus] = useState({ state: "LOADING" });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStatus = async () => {
+      try {
+        const res = await api.get("/daily-challenge/status");
+        if (!cancelled) setDailyStatus(res.data);
+      } catch (e) {
+        // If not logged in, your axios interceptor might redirect to /login
+        // But keep safe fallback
+        if (!cancelled) setDailyStatus({ state: "ERROR" });
+      }
+    };
+
+    loadStatus();
+    return () => (cancelled = true);
+  }, []);
+
+  const state = dailyStatus?.state;
+
+  const buttonLabel =
+    state === "WIN"
+      ? `✅ Completed Today${dailyStatus?.pointsAwarded ? ` (+${dailyStatus.pointsAwarded})` : ""}`
+      : state === "LOSE"
+      ? "❌ Failed Today"
+      : state === "PLAYING"
+      ? "▶️ Continue Daily Challenge"
+      : state === "LOGIN_REQUIRED"
+      ? "🔒 Login to Play"
+      : state === "LOADING"
+      ? "Loading..."
+      : "Play Daily Challenge";
+
+  // choose behavior:
+  // ✅ disable on WIN/LOSE
+  const disabled = state === "WIN" || state === "LOSE" || state === "LOADING";
+
+  // where to navigate
+  const target = state === "LOGIN_REQUIRED" ? "/login" : "/guessTheTeam";
 
   return (
     <div
@@ -79,13 +126,16 @@ export const LandingPage = () => {
 
       <div className="relative z-10 w-full flex flex-col items-center px-4">
         <div className="w-full max-w-6xl mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
+          {/* LEFT */}
           <div className="bg-green-950/70 border border-green-900 rounded-xl p-6 md:p-8 backdrop-blur-sm shadow-2xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
-              ⚽ Prove Your <span className="text-yellow-400">Ball Knowledge</span>
+              ⚽ Prove Your{" "}
+              <span className="text-yellow-400">Ball Knowledge</span>
             </h1>
 
             <p className="text-gray-200 mt-4 text-base md:text-lg">
-              Fast-paced trivia, daily challenges, and live duels. Climb the leaderboard and become the ultimate football brain.
+              Fast-paced trivia, daily challenges, and live duels. Climb the
+              leaderboard and become the ultimate football brain.
             </p>
 
             <div className="flex flex-wrap gap-2 mt-5">
@@ -130,19 +180,30 @@ export const LandingPage = () => {
             </div>
           </div>
 
+          {/* RIGHT */}
           <div className="grid grid-rows-3 gap-4">
             <div className="row-span-2 bg-green-950/70 border border-green-900 rounded-xl p-6 backdrop-blur-sm shadow-2xl flex flex-col">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold">🔥 Daily Challenge</h3>
+
+                {/* OPTIONAL: show status chip */}
                 <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-600/50">
-                  10 Q • Hard
+                  {state === "WIN"
+                    ? "Completed"
+                    : state === "LOSE"
+                    ? "Failed"
+                    : state === "PLAYING"
+                    ? "In Progress"
+                    : "Available"}
                 </span>
               </div>
 
               <p className="text-sm text-gray-300 mt-2">
-                Beat today’s set to earn bonus points and keep your streak alive.
+                Beat today’s set to earn bonus points and keep your streak
+                alive.
               </p>
 
+              {/* Timer bar */}
               <div className="mt-4">
                 <div className="flex items-center justify-between text-xs text-gray-300 mb-1">
                   <span>Resets in</span>
@@ -154,14 +215,24 @@ export const LandingPage = () => {
                 <div className="w-full h-2 bg-green-900 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-yellow-500 transition-all duration-1000"
-                    style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+                    style={{
+                      width: `${Math.min(100, Math.max(0, progress))}%`,
+                    }}
                   />
                 </div>
               </div>
 
-              <Link to="/guessTheTeam" className="mt-auto pt-4">
-                <button className="w-full bg-yellow-500 text-black py-3 rounded-lg font-semibold hover:bg-yellow-600 transition">
-                  Play Daily Challenge
+              <Link to={target} className="mt-auto pt-4">
+                <button
+                  disabled={disabled}
+                  className={`w-full py-3 rounded-lg font-semibold transition
+                    ${
+                      disabled
+                        ? "bg-gray-500 text-gray-200 cursor-not-allowed"
+                        : "bg-yellow-500 text-black hover:bg-yellow-600"
+                    }`}
+                >
+                  {buttonLabel}
                 </button>
               </Link>
             </div>
