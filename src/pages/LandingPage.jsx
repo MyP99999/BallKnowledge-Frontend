@@ -9,7 +9,7 @@ import { Leaderboard } from "../components/mini-components/Leaderboard";
 import { Clans } from "../components/mini-components/Clans";
 import { GamesSlider } from "../components/mini-components/GamesSlider";
 import { BottomAd } from "../components/layout/BottomAd";
-import api from "../api/axios"; // ✅ add this
+import api from "../api/axios";
 
 function getSecondsUntilUkMidnight() {
   const now = new Date();
@@ -22,26 +22,25 @@ function getSecondsUntilUkMidnight() {
 }
 
 export const LandingPage = () => {
-  const leaderboard = [
-    { name: "MessiGOAT", points: 4500 },
-    { name: "BallKnowledge99", points: 4100 },
-    { name: "CR7Fan", points: 3850 },
-    { name: "TacticsMaster", points: 3600 },
-    { name: "Underdog", points: 3400 },
-  ];
-
-  const features = [
-    { icon: "🔥", text: "Quiz Games" },
-    { icon: "🔥", text: "Daily Challenge" },
-  ];
-
-  const futureFeatures = [
-    { icon: "⚔️", text: "1v1 Matches" },
-    { icon: "👥", text: "Clans" },
-    { icon: "👥", text: "News" },
-  ];
-
   const { user } = useAuth();
+
+  // ✅ Daily Challenge status (DECLARE FIRST)
+  const [dailyStatus, setDailyStatus] = useState({ state: "LOADING" });
+
+  // ✅ Derived values (SAFE now)
+  const state = dailyStatus?.state;
+  const streak = Number(dailyStatus?.streak ?? 0);
+
+  const nextReward =
+    streak >= 7
+      ? 50
+      : streak >= 5
+      ? 40
+      : streak >= 2
+      ? 30
+      : streak >= 1
+      ? 25
+      : 20;
 
   // Fun live counters (mock)
   const [playersOnline, setPlayersOnline] = useState(1243);
@@ -55,7 +54,24 @@ export const LandingPage = () => {
     return () => clearInterval(id);
   }, []);
 
-  // ✅ Daily challenge countdown (UK midnight)
+  // Load daily status
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadStatus = async () => {
+      try {
+        const res = await api.get("/daily-challenge/status");
+        if (!cancelled) setDailyStatus(res.data);
+      } catch {
+        if (!cancelled) setDailyStatus({ state: "LOGIN_REQUIRED" });
+      }
+    };
+
+    loadStatus();
+    return () => (cancelled = true);
+  }, []);
+
+  // Countdown
   const [secondsLeft, setSecondsLeft] = useState(() =>
     getSecondsUntilUkMidnight()
   );
@@ -74,32 +90,13 @@ export const LandingPage = () => {
   const DAY_SECONDS = 24 * 60 * 60;
   const progress = ((DAY_SECONDS - secondsLeft) / DAY_SECONDS) * 100;
 
-  // ✅ Daily Challenge status (WIN/LOSE/PLAYING/NOT_PLAYED/LOGIN_REQUIRED)
-  const [dailyStatus, setDailyStatus] = useState({ state: "LOADING" });
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadStatus = async () => {
-      try {
-        const res = await api.get("/daily-challenge/status");
-        if (!cancelled) setDailyStatus(res.data);
-      } catch (e) {
-        // If not logged in, your axios interceptor might redirect to /login
-        // But keep safe fallback
-        if (!cancelled) setDailyStatus({ state: "ERROR" });
-      }
-    };
-
-    loadStatus();
-    return () => (cancelled = true);
-  }, []);
-
-  const state = dailyStatus?.state;
-
   const buttonLabel =
     state === "WIN"
-      ? `✅ Completed Today${dailyStatus?.pointsAwarded ? ` (+${dailyStatus.pointsAwarded})` : ""}`
+      ? `✅ Completed Today${
+          dailyStatus?.pointsAwarded
+            ? ` (+${dailyStatus.pointsAwarded})`
+            : ""
+        }`
       : state === "LOSE"
       ? "❌ Failed Today"
       : state === "PLAYING"
@@ -110,11 +107,7 @@ export const LandingPage = () => {
       ? "Loading..."
       : "Play Daily Challenge";
 
-  // choose behavior:
-  // ✅ disable on WIN/LOSE
   const disabled = state === "WIN" || state === "LOSE" || state === "LOADING";
-
-  // where to navigate
   const target = state === "LOGIN_REQUIRED" ? "/login" : "/guessTheTeam";
 
   return (
@@ -125,126 +118,89 @@ export const LandingPage = () => {
       <Overlay />
 
       <div className="relative z-10 w-full flex flex-col items-center px-4">
-        <div className="w-full max-w-6xl mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
+        <div className="w-full max-w-6xl mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           {/* LEFT */}
-          <div className="bg-green-950/70 border border-green-900 rounded-xl p-6 md:p-8 backdrop-blur-sm shadow-2xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight">
-              ⚽ Prove Your{" "}
-              <span className="text-yellow-400">Ball Knowledge</span>
+          <div className="bg-green-950/70 border border-green-900 rounded-xl p-8 backdrop-blur-sm shadow-2xl">
+            <h1 className="text-5xl font-extrabold">
+              ⚽ Prove Your <span className="text-yellow-400">Ball Knowledge</span>
             </h1>
 
-            <p className="text-gray-200 mt-4 text-base md:text-lg">
-              Fast-paced trivia, daily challenges, and live duels. Climb the
-              leaderboard and become the ultimate football brain.
+            <p className="text-gray-200 mt-4">
+              Fast-paced trivia, daily challenges, and live duels.
             </p>
-
-            <div className="flex flex-wrap gap-2 mt-5">
-              {features.map((f, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-900/60 border border-green-800 text-sm"
-                >
-                  <span className="text-lg">{f.icon}</span> {f.text}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex items-center flex-wrap gap-2 mt-5">
-              <h1>Coming Soon: </h1>
-              {futureFeatures.map((f, i) => (
-                <span
-                  key={i}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-900/60 border border-green-800 text-sm"
-                >
-                  <span className="text-lg">{f.icon}</span> {f.text}
-                </span>
-              ))}
-            </div>
-
-            <div className="flex xs:flex-wrap gap-2 xs:gap-3 mt-6">
-              <Link to="/games">
-                <button className="bg-yellow-500 text-black px-3 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition shadow-md">
-                  Play Now
-                </button>
-              </Link>
-              <Link to="/quiz">
-                <button className="bg-transparent border border-yellow-400/70 text-yellow-300 px-3 py-3 rounded-lg font-semibold hover:bg-yellow-500/10 transition">
-                  Quick Practice
-                </button>
-              </Link>
-              <Link to="/leaderboard" className="ml-auto md:ml-0">
-                <button className="bg-transparent border border-green-700 text-white px-3 py-3 rounded-lg hover:bg-white/5 transition">
-                  View Leaderboard
-                </button>
-              </Link>
-            </div>
           </div>
 
           {/* RIGHT */}
-          <div className="grid grid-rows-3 gap-4">
-            <div className="row-span-2 bg-green-950/70 border border-green-900 rounded-xl p-6 backdrop-blur-sm shadow-2xl flex flex-col">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold">🔥 Daily Challenge</h3>
+          <div className="bg-green-950/70 border border-green-900 rounded-xl p-6 shadow-2xl flex flex-col">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold">🔥 Daily Challenge</h3>
+              <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full">
+                {state === "WIN" && "Completed"}
+                {state === "LOSE" && "Failed"}
+                {state === "PLAYING" && "In Progress"}
+                {state === "NOT_PLAYED" && "Available"}
+                {state === "LOGIN_REQUIRED" && "Login Required"}
+                {state === "LOADING" && "Loading"}
+              </span>
+            </div>
 
-                {/* OPTIONAL: show status chip */}
-                <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-600/50">
-                  {state === "WIN"
-                    ? "Completed"
-                    : state === "LOSE"
-                    ? "Failed"
-                    : state === "PLAYING"
-                    ? "In Progress"
-                    : "Available"}
+            <p className="text-sm text-gray-300 mt-2">
+              Beat today’s set to earn bonus points and keep your streak alive.
+            </p>
+
+            {/* 🔥 STREAK */}
+            <div className="mt-3 flex items-center justify-between">
+              <div className="text-sm">
+                <span className="text-orange-400 font-semibold">🔥 Streak:</span>{" "}
+                <span className="text-gray-200">
+                  {streak} day{streak === 1 ? "" : "s"}
                 </span>
               </div>
-
-              <p className="text-sm text-gray-300 mt-2">
-                Beat today’s set to earn bonus points and keep your streak
-                alive.
-              </p>
-
-              {/* Timer bar */}
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-xs text-gray-300 mb-1">
-                  <span>Resets in</span>
-                  <span className="tabular-nums font-semibold">
-                    {hh}:{mm}:{ss}
-                  </span>
-                </div>
-
-                <div className="w-full h-2 bg-green-900 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-yellow-500 transition-all duration-1000"
-                    style={{
-                      width: `${Math.min(100, Math.max(0, progress))}%`,
-                    }}
-                  />
-                </div>
+              <div className="text-xs text-gray-300">
+                Next win:{" "}
+                <span className="text-yellow-300 font-semibold">
+                  +{nextReward}
+                </span>
               </div>
+            </div>
 
-              <Link to={target} className="mt-auto pt-4">
+            {/* Timer */}
+            <div className="mt-4">
+              <div className="flex justify-between text-xs text-gray-300">
+                <span>Resets in</span>
+                <span>{hh}:{mm}:{ss}</span>
+              </div>
+              <div className="h-2 bg-green-900 rounded-full overflow-hidden mt-1">
+                <div
+                  className="h-full bg-yellow-500 transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Button */}
+            <div className="mt-auto pt-4">
+              {disabled ? (
                 <button
-                  disabled={disabled}
-                  className={`w-full py-3 rounded-lg font-semibold transition
-                    ${
-                      disabled
-                        ? "bg-gray-500 text-gray-200 cursor-not-allowed"
-                        : "bg-yellow-500 text-black hover:bg-yellow-600"
-                    }`}
+                  disabled
+                  className="w-full py-3 rounded-lg bg-gray-500 text-gray-200 cursor-not-allowed"
                 >
                   {buttonLabel}
                 </button>
-              </Link>
+              ) : (
+                <Link to={target}>
+                  <button className="w-full py-3 rounded-lg bg-yellow-500 text-black hover:bg-yellow-600">
+                    {buttonLabel}
+                  </button>
+                </Link>
+              )}
             </div>
-
-            {/* rest of your component unchanged... */}
           </div>
         </div>
 
         <GamesSlider user={user} />
-
-        <div className="w-full my-16 max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 items-stretch mb-12">
-          <Leaderboard leaderboard={leaderboard} />
+        <div className="w-full my-16 max-w-6xl grid grid-cols-2 gap-8">
+          <Leaderboard leaderboard={[]} />
           <Clans />
         </div>
       </div>

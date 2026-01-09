@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 export const GuessTheTeamPage = () => {
   const [image, setImage] = useState(null);
@@ -7,6 +8,8 @@ export const GuessTheTeamPage = () => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [status, setStatus] = useState("playing"); // playing | win | lose
   const [tries, setTries] = useState(3);
+  const [streak, setStreak] = useState(0);
+  const [points, setPoints] = useState(0);
 
   const [revealedAnswer, setRevealedAnswer] = useState("");
   const [loading, setLoading] = useState(true);
@@ -17,6 +20,27 @@ export const GuessTheTeamPage = () => {
   const [showSug, setShowSug] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const debounceRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const guard = async () => {
+      try {
+        const res = await api.get("/daily-challenge/status");
+        const state = res.data?.state;
+
+        if (!cancelled && (state === "WIN" || state === "LOSE")) {
+          navigate("/", { replace: true });
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    guard();
+    return () => (cancelled = true);
+  }, [navigate]);
 
   // 1️⃣ Load daily challenge
   useEffect(() => {
@@ -140,6 +164,12 @@ export const GuessTheTeamPage = () => {
 
       if (res.data.correct) {
         setStatus("win");
+        if (res.data.streak) {
+          setStreak(res.data.streak);
+        }
+        if (res.data.pointsAwarded) {
+          setPoints(res.data.pointsAwarded);
+        }
       } else {
         if (tries - 1 <= 0) {
           setTries(0);
@@ -198,7 +228,9 @@ export const GuessTheTeamPage = () => {
     <div className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center justify-center p-6">
       <h1 className="text-3xl font-bold mb-4">Guess the Team 🏳️⚽</h1>
 
-      {loading && <div className="text-gray-300">Loading daily challenge...</div>}
+      {loading && (
+        <div className="text-gray-300">Loading daily challenge...</div>
+      )}
 
       {!loading && error && (
         <div className="text-red-300 bg-red-950/40 border border-red-800 px-4 py-3 rounded-lg max-w-md text-center">
@@ -275,6 +307,10 @@ export const GuessTheTeamPage = () => {
                   Answer: <b>{revealedAnswer.toUpperCase()}</b>
                 </div>
               )}
+              <div className="text-base text-gray-200 mt-2">
+                +{points} points
+              </div>
+              <div className="text-orange-400 mt-1">🔥 {streak}-day streak</div>
             </div>
           )}
 
@@ -287,7 +323,9 @@ export const GuessTheTeamPage = () => {
                   Answer was: <b>{revealedAnswer.toUpperCase()}</b>
                 </>
               ) : (
-                <span className="text-gray-300 text-base">(Revealing answer...)</span>
+                <span className="text-gray-300 text-base">
+                  (Revealing answer...)
+                </span>
               )}
             </div>
           )}
