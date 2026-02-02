@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Overlay } from "../components/layout/Overlay";
+import AutocompleteInput from "../components/mini-components/AutocompleteInput"; // ✅ add
 
 export const RegisterPage = () => {
   const { register, googleLogin } = useAuth();
@@ -12,7 +13,10 @@ export const RegisterPage = () => {
     username: "",
     email: "",
     password: "",
+    country: "",
+    favouriteTeam: "",
   });
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -74,6 +78,7 @@ export const RegisterPage = () => {
               placeholder="Your username"
             />
           </div>
+
           <div>
             <label className="block text-white text-sm mb-1">Email</label>
             <input
@@ -86,6 +91,7 @@ export const RegisterPage = () => {
               placeholder="you@example.com"
             />
           </div>
+
           <div>
             <label className="block text-white text-sm mb-1">Password</label>
             <input
@@ -98,6 +104,27 @@ export const RegisterPage = () => {
               placeholder="••••••••"
             />
           </div>
+
+          {/* ✅ Country autocomplete */}
+          <AutocompleteInput
+            label="Country"
+            name="country"
+            value={formData.country}
+            onChange={handleChange}
+            placeholder="Country"
+            fetchUrl="/players/suggestCountry"
+          />
+
+          {/* ✅ Favourite Team autocomplete */}
+          <AutocompleteInput
+            label="Favourite Team"
+            name="favouriteTeam"
+            value={formData.favouriteTeam}
+            onChange={handleChange}
+            placeholder="Football Team"
+            fetchUrl="/players/suggestTeam"
+          />
+
           <button
             type="submit"
             disabled={loading}
@@ -106,20 +133,6 @@ export const RegisterPage = () => {
             {loading ? "Registering..." : "Register"}
           </button>
         </form>
-
-        <div className="mt-6">
-          <button
-            onClick={googleLogin}
-            className="w-full flex items-center justify-center space-x-3 bg-white text-gray-800 font-semibold py-3 rounded-lg shadow hover:bg-gray-100 transition"
-          >
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              className="w-5 h-5"
-            />
-            <span>Sign up with Google</span>
-          </button>
-        </div>
 
         <p className="text-center text-sm text-gray-300 mt-4">
           Already have an account?{" "}

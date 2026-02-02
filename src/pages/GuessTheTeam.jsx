@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export const GuessTheTeamPage = () => {
   const [image, setImage] = useState(null);
@@ -12,6 +12,7 @@ export const GuessTheTeamPage = () => {
   const [points, setPoints] = useState(0);
 
   const [revealedAnswer, setRevealedAnswer] = useState("");
+  const [revealedSeason, setRevealedSeason] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -113,7 +114,10 @@ export const GuessTheTeamPage = () => {
     const reveal = async () => {
       try {
         const res = await api.get("/daily-challenge/reveal");
-        if (!cancelled) setRevealedAnswer(res.data.correctAnswer || "");
+        if (!cancelled) {
+          setRevealedAnswer(res.data.correctAnswer || "");
+          setRevealedSeason(res.data?.season || "")
+        }
       } catch (e) {
         if (!cancelled) setError("Failed to reveal answer");
       }
@@ -156,7 +160,7 @@ export const GuessTheTeamPage = () => {
   const submitAnswer = async (forcedValue) => {
     if (!image || status !== "playing") return;
 
-    const guess = (forcedValue ?? answer).toLowerCase().trim();
+    const guess = forcedValue ?? answer;
     if (!guess) return;
 
     try {
@@ -248,60 +252,64 @@ export const GuessTheTeamPage = () => {
 
           {status === "playing" && (
             <>
+              {/* Top stats */}
               <div className="flex gap-6 mb-3 text-lg">
                 <span>⏱ {timeLeft}s</span>
                 <span>❤️ {tries}</span>
                 {image.difficulty && <span>🎯 {image.difficulty}</span>}
               </div>
 
-              {/* ✅ Input + suggestions dropdown */}
-              <div className="relative w-64 mb-3">
-                <input
-                  value={answer}
-                  onChange={(e) => {
-                    setAnswer(e.target.value);
-                    // only show if we already have suggestions
-                    if (suggestions.length > 0) setShowSug(true);
-                  }}
-                  onKeyDown={onKeyDown}
-                  onFocus={() => suggestions.length > 0 && setShowSug(true)}
-                  onBlur={() => setTimeout(() => setShowSug(false), 150)} // allow click
-                  placeholder="Enter team name..."
-                  className="px-4 py-2 rounded-lg text-black w-full"
-                  autoComplete="off"
-                />
+              {/* Input + button row */}
+              <div className="flex items-start gap-3">
+                {/* Input + suggestions */}
+                <div className="relative w-64">
+                  <input
+                    value={answer}
+                    onChange={(e) => {
+                      setAnswer(e.target.value);
+                      if (suggestions.length > 0) setShowSug(true);
+                    }}
+                    onKeyDown={onKeyDown}
+                    onFocus={() => suggestions.length > 0 && setShowSug(true)}
+                    onBlur={() => setTimeout(() => setShowSug(false), 150)}
+                    placeholder="Enter team name..."
+                    className="px-4 py-2 rounded-lg text-black w-full"
+                    autoComplete="off"
+                  />
 
-                {showSug && suggestions.length > 0 && (
-                  <div className="absolute z-50 mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-xl">
-                    {suggestions.map((s, idx) => (
-                      <button
-                        key={`${s}-${idx}`}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()} // prevent blur before click
-                        onClick={() => pickSuggestion(s)}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-800 ${
-                          idx === activeIndex ? "bg-slate-800" : ""
-                        }`}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  {showSug && suggestions.length > 0 && (
+                    <div className="absolute z-50 mt-1 w-full bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-xl">
+                      {suggestions.map((s, idx) => (
+                        <button
+                          key={`${s}-${idx}`}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => pickSuggestion(s)}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-800 ${
+                            idx === activeIndex ? "bg-slate-800" : ""
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Submit button */}
+                <button
+                  onClick={() => submitAnswer()}
+                  className="bg-emerald-600 px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700 h-[42px]"
+                >
+                  Submit
+                </button>
               </div>
-
-              <button
-                onClick={() => submitAnswer()}
-                className="bg-emerald-600 px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700"
-              >
-                Submit
-              </button>
             </>
           )}
 
           {status === "win" && (
             <div className="text-green-400 text-2xl mt-4 text-center">
-              ✅ Correct!
+              ✅ Correct! <b>{revealedAnswer.toUpperCase()}</b> - Season: {revealedSeason}
               {revealedAnswer && (
                 <div className="text-base text-gray-200 mt-2">
                   Answer: <b>{revealedAnswer.toUpperCase()}</b>
@@ -311,12 +319,18 @@ export const GuessTheTeamPage = () => {
                 +{points} points
               </div>
               <div className="text-orange-400 mt-1">🔥 {streak}-day streak</div>
+              {/* ✅ Return home */}
+              <Link to="/">
+                <button className="mt-4 px-6 py-2 rounded-lg bg-yellow-500 text-black font-semibold hover:bg-yellow-600 transition">
+                  ⬅️ Back to Home
+                </button>
+              </Link>
             </div>
           )}
 
           {status === "lose" && (
             <div className="text-red-400 text-xl mt-4 text-center">
-              ❌ Game over!
+              ❌ Game over! The correct answer is: <b>{revealedAnswer.toUpperCase()}</b> - Season: {revealedSeason}
               <br />
               {revealedAnswer ? (
                 <>
@@ -327,6 +341,14 @@ export const GuessTheTeamPage = () => {
                   (Revealing answer...)
                 </span>
               )}
+              {/* ✅ Return home */}
+              <div className="mt-4">
+                <Link to="/">
+                  <button className="px-6 py-2 rounded-lg bg-gray-600 text-white font-semibold hover:bg-gray-700 transition">
+                    ⬅️ Back to Home
+                  </button>
+                </Link>
+              </div>
             </div>
           )}
         </>

@@ -99,7 +99,7 @@ export const LoginPage = () => {
         )}
 
         {/* Google Login */}
-        <div className="mt-6">
+        {/* <div className="mt-6">
           <button
             onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center space-x-3 bg-white text-gray-800 font-semibold py-3 rounded-lg shadow hover:bg-gray-100 transition"
@@ -111,7 +111,7 @@ export const LoginPage = () => {
             />
             <span>Login with Google</span>
           </button>
-        </div>
+        </div> */}
 
         <p className="text-center text-sm text-gray-300 mt-4">
           Don’t have an account?{" "}
