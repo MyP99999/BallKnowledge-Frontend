@@ -13,7 +13,7 @@ function decodeJwtPayload(token) {
 }
 
 const api = axios.create({
-  baseURL: "http://localhost:8080/api", // adjust if deployed
+  baseURL: process.env.REACT_APP_API_BASE_URL,
   headers: { "Content-Type": "application/json" },
 });
 
